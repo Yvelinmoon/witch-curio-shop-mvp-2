@@ -61,6 +61,7 @@
     netaAuthStatus: document.getElementById("netaAuthStatus"),
     netaAuthHint: document.getElementById("netaAuthHint"),
     creatorAgentHint: document.getElementById("creatorAgentHint"),
+    creatorHallButton: document.getElementById("creatorHallButton"),
     llmProbeButton: document.getElementById("llmProbeButton"),
     llmProbeResult: document.getElementById("llmProbeResult"),
     creatorLlmStatus: document.getElementById("creatorLlmStatus"),
@@ -1435,6 +1436,9 @@
   });
   elements.enterShopButton.addEventListener("click", handleEnterShop);
   elements.rebuildShopButton.addEventListener("click", handleRebuild);
+  elements.creatorHallButton?.addEventListener("click", () => {
+    showCreatorToast("大厅即将上线", "即将上线，敬请期待。");
+  });
   elements.llmProbeButton?.addEventListener("click", handleRunLlmProbe);
   elements.netaAuthButton?.addEventListener("click", async () => {
     const auth = window.NetaAuth;

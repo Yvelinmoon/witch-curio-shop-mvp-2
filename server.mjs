@@ -841,20 +841,51 @@ function safeJsonParse(input) {
   }
 }
 
+function normalizeJsonLikeText(input = "") {
+  return String(input || "")
+    .replace(/[“”„‟＂「」『』]/g, '"')
+    .replace(/[‘’‚‛＇]/g, '"')
+    .replace(/：/g, ":")
+    .replace(/，/g, ",")
+    .replace(/；/g, ";")
+    .replace(/（/g, "(")
+    .replace(/）/g, ")")
+    .replace(/【/g, "[")
+    .replace(/】/g, "]")
+    .replace(/｛/g, "{")
+    .replace(/｝/g, "}")
+    .replace(/［/g, "[")
+    .replace(/］/g, "]")
+    .replace(/([,{]\s*)"([A-Za-z0-9_]+):"(?=\S)/g, '$1"$2":"')
+    .replace(/("([A-Za-z0-9_]+)"\s*:\s*)([^"{\[\]\d\-tfn][^"]*)"(?!\s*:)(?=\s*[,}\]])/g, '$1"$3"')
+    .replace(/("tags"\s*:\s*\[(?:\s*"[^"]*"\s*(?:,\s*"[^"]*"\s*)*)?)\}(?=\s*[,}\]])/g, "$1]}")
+    .replace(/("ingredients"\s*:\s*\[(?:\s*"[^"]*"\s*(?:,\s*"[^"]*"\s*)*)?)\}(?=\s*[,}\]])/g, "$1]}")
+    .replace(/([}\]])\s*("([A-Za-z0-9_]+)"\s*:)/g, "$1,$2")
+    .replace(/,\s*([}\]])/g, "$1");
+}
+
 function parseModelJson(input = "") {
   const direct = safeJsonParse(input);
   if (direct) return direct;
+
+  const normalizedDirect = safeJsonParse(normalizeJsonLikeText(input));
+  if (normalizedDirect) return normalizedDirect;
 
   const fencedMatch = input.match(/```(?:json)?\s*([\s\S]*?)```/i);
   if (fencedMatch?.[1]) {
     const fenced = safeJsonParse(fencedMatch[1].trim());
     if (fenced) return fenced;
+    const normalizedFenced = safeJsonParse(normalizeJsonLikeText(fencedMatch[1].trim()));
+    if (normalizedFenced) return normalizedFenced;
   }
 
   const firstBrace = input.indexOf("{");
   const lastBrace = input.lastIndexOf("}");
   if (firstBrace >= 0 && lastBrace > firstBrace) {
-    return safeJsonParse(input.slice(firstBrace, lastBrace + 1));
+    const candidate = input.slice(firstBrace, lastBrace + 1);
+    const parsedCandidate = safeJsonParse(candidate);
+    if (parsedCandidate) return parsedCandidate;
+    return safeJsonParse(normalizeJsonLikeText(candidate));
   }
 
   return null;

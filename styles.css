@@ -2177,8 +2177,8 @@ body.creator-page-active {
   display: grid;
   width: min(100%, 880px);
   margin: 0 auto;
-  grid-template-rows: 304px auto auto;
-  gap: 12px;
+  grid-template-rows: 288px auto auto;
+  gap: 14px;
   min-height: 0;
   height: auto;
 }
@@ -2221,10 +2221,12 @@ body.creator-page-active {
 .creator-stage-scene {
   position: relative;
   width: 100%;
-  height: 304px;
-  min-height: 304px;
+  height: 288px;
+  min-height: 288px;
   display: grid;
-  place-items: end center;
+  place-items: center;
+  padding: 18px 22px 18px;
+  box-sizing: border-box;
   overflow: hidden;
   border: 3px solid var(--wood);
   border-radius: 34px;
@@ -2251,10 +2253,10 @@ body.creator-page-active {
   z-index: 1;
   display: grid;
   place-items: center;
-  align-self: center;
-  width: min(100%, 316px);
-  height: 228px;
-  padding: 10px 10px 18px;
+  align-self: stretch;
+  width: min(100%, 420px);
+  height: 100%;
+  padding: 8px 0 12px;
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -2289,10 +2291,12 @@ body.creator-page-active {
   display: block;
   width: 100%;
   height: 100%;
+  min-width: 0;
+  min-height: 0;
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-  object-position: center center;
+  object-position: center bottom;
   filter: drop-shadow(0 18px 24px rgba(75, 56, 41, 0.18));
 }
 
@@ -2681,7 +2685,7 @@ body.creator-page-active {
   }
 
   .creator-visual-novel {
-    grid-template-rows: 292px auto auto;
+    grid-template-rows: 276px auto auto;
   }
 
   .creator-visual-novel[data-mode="portrait-loading"] {
@@ -2690,13 +2694,13 @@ body.creator-page-active {
   }
 
   .creator-stage-scene {
-    height: 292px;
-    min-height: 292px;
+    height: 276px;
+    min-height: 276px;
   }
 
   .creator-stage-frame {
-    width: min(100%, 296px);
-    height: 214px;
+    width: min(100%, 384px);
+    height: 100%;
   }
 
   .creator-build-progress-steps {
@@ -2798,13 +2802,15 @@ body.creator-page-active {
   }
 
   .creator-stage-scene {
-    height: 248px;
-    min-height: 248px;
+    height: 228px;
+    min-height: 228px;
+    padding: 14px 16px;
   }
 
   .creator-stage-frame {
-    width: min(100%, 236px);
-    height: 176px;
+    width: min(100%, 300px);
+    height: 100%;
+    padding-bottom: 8px;
   }
 
   .creator-build-progress {

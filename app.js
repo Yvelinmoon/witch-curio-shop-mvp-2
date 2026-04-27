@@ -512,6 +512,7 @@ const elements = {
   shelfList: document.getElementById("shelfList"),
   codexList: document.getElementById("codexList"),
   resetButton: document.getElementById("resetButton"),
+  openHallButton: document.getElementById("openHallButton"),
   openShelfButton: document.getElementById("openShelfButton"),
   openCodexButton: document.getElementById("openCodexButton"),
   libraryOverlay: document.getElementById("libraryOverlay"),
@@ -593,6 +594,9 @@ document.querySelectorAll("#libraryTabs [data-library-view]").forEach((button) =
 
 elements.openShelfButton.addEventListener("click", () => openLibrary("shelf"));
 elements.openCodexButton.addEventListener("click", () => openLibrary("codex"));
+elements.openHallButton.addEventListener("click", () => {
+  showToast("大厅即将上线", "即将上线，敬请期待。");
+});
 elements.closeLibraryButton.addEventListener("click", closeLibrary);
 
 elements.introSkip.addEventListener("click", finishIntro);

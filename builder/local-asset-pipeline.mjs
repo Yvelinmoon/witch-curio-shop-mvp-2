@@ -80,13 +80,21 @@ function buildSheetSlotPlan(handshake) {
   return slotPlan;
 }
 
+function buildSheetSlotSemanticCue(slot) {
+  const visualNotes = [slot.name, slot.description]
+    .map((item) => normalizeText(item))
+    .filter(Boolean)
+    .join("; ");
+  return visualNotes || `${slot.chainLabel} tier ${slot.tier}`;
+}
+
 function buildShopSheetPrompt(handshake) {
   const concept = handshake?.concept || {};
   const prompt = handshake?.prompts?.shopSheet || "";
   const slotPlan = buildSheetSlotPlan(handshake);
   const slotLines = slotPlan.map(
     (slot) =>
-      `R${slot.row}C${slot.col} | ${slot.itemId} | ${slot.name} | ${slot.description || "no extra description"}`,
+      `R${slot.row}C${slot.col} | ${slot.itemId} | semantic cue only: ${buildSheetSlotSemanticCue(slot)}`,
   );
   return [
     prompt,
@@ -97,6 +105,13 @@ function buildShopSheetPrompt(handshake) {
     `Loop summary: ${concept.loopSummary || ""}`,
     "Need a single coherent 4x8 sprite sheet for merge gameplay props.",
     "Every tile slot must match the requested item exactly. Do not reorder, omit, merge, or substitute slots.",
+    "Slot notes are internal semantic guidance only. Never render these words as readable text.",
+    "Do not render any letters, Chinese characters, words, numbers, logos, signage, package copy, watermarks, badges, stamps, or labels anywhere in the image.",
+    "If an item would normally include branding or printed packaging, replace it with blank unbranded surfaces and shape-only decoration.",
+    "Each tile must contain one centered isolated prop only, with no scene background and no extra UI elements.",
+    "Leave generous pure white padding around every prop inside its own slot.",
+    "Keep obvious empty whitespace between neighboring slots so no silhouette touches or crosses into another tile.",
+    "Make every prop slightly smaller than the slot bounds to keep grid cutting safe.",
     "Tile slot plan, left to right and top to bottom:",
     ...slotLines,
     "Solid pure white background only, isolated props, consistent magical shop style, no text.",
@@ -116,7 +131,7 @@ function buildSafeShopSheetPrompt(handshake) {
       secret: "rare original hidden shop reward",
     };
     const descriptor = chainDescriptorMap[slot.chainId] || "original fantasy prop";
-    return `R${slot.row}C${slot.col} | ${slot.itemId} | ${descriptor} | tier ${slot.tier}`;
+    return `R${slot.row}C${slot.col} | ${slot.itemId} | ${descriptor} | tier ${slot.tier} | semantic cue only: ${buildSheetSlotSemanticCue(slot)}`;
   });
 
   return [
@@ -124,6 +139,13 @@ function buildSafeShopSheetPrompt(handshake) {
     "Do not reference any existing franchise, trademark, copyrighted character, branded location, or protected product design.",
     "Need a single coherent 4x8 sprite sheet for merge gameplay props.",
     "Every tile slot must match the requested itemId exactly. Do not reorder, omit, merge, or substitute slots.",
+    "Slot notes are internal semantic guidance only. Never render these words as readable text.",
+    "Do not render any letters, Chinese characters, words, numbers, logos, signage, package copy, watermarks, badges, stamps, or labels anywhere in the image.",
+    "If an item would normally include branding or printed packaging, replace it with blank unbranded surfaces and shape-only decoration.",
+    "Each tile must contain one centered isolated prop only, with no scene background and no extra UI elements.",
+    "Leave generous pure white padding around every prop inside its own slot.",
+    "Keep obvious empty whitespace between neighboring slots so no silhouette touches or crosses into another tile.",
+    "Make every prop slightly smaller than the slot bounds to keep grid cutting safe.",
     "Tile slot plan, left to right and top to bottom:",
     ...slotLines,
     "Visual style: warm, handcrafted, whimsical fantasy shop props.",
@@ -146,6 +168,9 @@ function buildAssistantPrompt(handshake) {
     "Left to right order must be: smile, serious, angry, confused.",
     "Half-body portrait framing only, fully visible character in each panel.",
     "Same character design in all four panels, solid pure white background only.",
+    "Leave generous whitespace between the four panels so slicing never cuts into hair, hands, or shoulders.",
+    "Keep each character centered and slightly smaller than the panel bounds.",
+    "Do not let any body part cross panel boundaries.",
   ]
     .filter(Boolean)
     .join("\n\n");
@@ -165,6 +190,9 @@ function buildSafeAssistantPrompt(handshake) {
     "Left to right order must be: smile, serious, angry, confused.",
     "Half-body portrait framing only, fully visible character in each panel.",
     "Same character design in all four panels, solid pure white background only.",
+    "Leave generous whitespace between the four panels so slicing never cuts into hair, hands, or shoulders.",
+    "Keep each character centered and slightly smaller than the panel bounds.",
+    "Do not let any body part cross panel boundaries.",
   ].join("\n\n");
 }
 
@@ -247,6 +275,16 @@ function extractArtifactUuidFromOutput(stdout, stderr = "") {
   return matched ? matched[0] : null;
 }
 
+function isSilentTaskFailure(stdout = "", stderr = "") {
+  const combined = `${stdout || ""}\n${stderr || ""}`.trim();
+  if (!combined) return false;
+  const parsed = extractJsonBlock(combined);
+  if (!parsed || typeof parsed !== "object") return false;
+  const taskStatus = normalizeText(parsed.task_status || parsed.taskStatus).toUpperCase();
+  const artifacts = Array.isArray(parsed.artifacts) ? parsed.artifacts : null;
+  return taskStatus === "FAILURE" && artifacts?.length === 0;
+}
+
 function isPromptComplianceError(...parts) {
   const combined = parts
     .filter(Boolean)
@@ -289,6 +327,9 @@ async function runNetaMakeImageOnce({ prompt, width, height, aspect }) {
   const imageUrl = extractImageUrlFromOutput(stdout, stderr);
   const artifactUuid = extractArtifactUuidFromOutput(stdout, stderr);
   if (!imageUrl) {
+    if (isSilentTaskFailure(stdout, stderr)) {
+      throw new Error(`Neta make_image task failed without artifacts.\nstdout:\n${stdout}\nstderr:\n${stderr}`);
+    }
     throw new Error(`make_image did not return an image URL.\nstdout:\n${stdout}\nstderr:\n${stderr}`);
   }
   return {
@@ -317,7 +358,9 @@ async function runNetaMakeImage({ prompt, promptVariants = [], width, height, as
       });
     } catch (error) {
       lastError = error;
-      const shouldRetry = isPromptComplianceError(error?.message || "");
+      const shouldRetry =
+        isPromptComplianceError(error?.message || "") ||
+        /task failed without artifacts/i.test(String(error?.message || ""));
       if (!shouldRetry || index === variants.length - 1) {
         throw error;
       }
