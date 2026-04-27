@@ -1,0 +1,25 @@
+{
+  "id": "shop-builder-v1",
+  "name": "World Shop Builder",
+  "description": "Builds a world-embedded merge shop from a user idea, with a story intro, assistant role, theme tokens, and asset prompts.",
+  "worldTemplate": "single-room shop view from the counter, merge board + order loop",
+  "generationPlan": {
+    "requiredImages": [
+      "shop_sheet_4x8",
+      "assistant_sheet_1x4"
+    ],
+      "optionalImages": [
+        "theme_header"
+      ],
+      "tileSplit": {
+        "rows": 4,
+        "cols": 8,
+        "script": "/Users/yves/witch-curio-shop-mvp-2/builder/scripts/split_image_grid.py"
+      }
+    },
+  "adapters": {
+    "llm": "independent-chat-adapter",
+    "image": "neta-creative-adapter",
+    "processor": "local-split-script"
+  }
+}

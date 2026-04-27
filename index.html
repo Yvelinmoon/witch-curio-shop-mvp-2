@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>世界商店建造 MVP</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23f7d88f'/%3E%3Cpath d='M16 12h8v18h16V12h8v40h-8V38H24v14h-8z' fill='%234b3829'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div id="appShell" class="app-shell" data-shop-rank="1" hidden>
+      <div class="glow glow-a"></div>
+      <div class="glow glow-b"></div>
+
+      <header class="topbar">
+        <div class="brand-block">
+          <div class="brand-mark">H</div>
+          <div class="brand-copy">
+            <p id="brandEyebrow" class="eyebrow">Room of Requirement</p>
+            <strong id="brandTitle" class="brand-title">有求必应屋杂货店</strong>
+            <div class="brand-level-line">
+              <span class="brand-level-chip">Lv.<strong id="levelValue">1</strong></span>
+              <span id="brandRankLabel" class="brand-rank-label">筹备开张</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="status-bar">
+          <div class="stat-card">
+            <span class="stat-label">金币</span>
+            <strong id="goldValue">0</strong>
+          </div>
+          <button id="openCodexButton" class="stat-card stat-action-card" type="button">
+            <span class="stat-label">图鉴</span>
+            <strong id="discoveriesValue">0 / 32</strong>
+          </button>
+          <button id="openShelfButton" class="stat-card stat-action-card" type="button">
+            <span class="stat-label">收藏</span>
+            <strong id="shelfCountValue">0 / 4</strong>
+          </button>
+          <button id="resetButton" class="ghost-button" type="button">重新开始</button>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section class="panel play-panel">
+          <div class="board-ribbon board-ribbon-ticker">
+            <div class="board-ticker-window">
+              <div class="board-ticker-track">
+                <span id="worldTicker" class="board-ticker-text"></span>
+                <span id="worldTickerEcho" class="board-ticker-text" aria-hidden="true"></span>
+              </div>
+            </div>
+          </div>
+
+          <div id="board" class="board" aria-label="Harry Potter merge board"></div>
+
+          <div class="play-footer">
+            <button id="trashBin" class="trash-bin" type="button" aria-label="垃圾桶">
+              <span class="trash-bin-icon">🗑</span>
+              <span class="trash-bin-copy">
+                <strong>垃圾桶</strong>
+                <span>把废料或多余材料拖过来丢掉</span>
+              </span>
+            </button>
+
+            <div class="legend-row">
+              <div class="legend-chip">
+                <span class="legend-dot dot-discovery"></span>
+                新发现
+              </div>
+              <div class="legend-chip">
+                <span class="legend-dot dot-rare"></span>
+                稀有事件
+              </div>
+              <div class="legend-chip">
+                <span class="legend-dot dot-tint"></span>
+                货线底色
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <aside class="sidebar">
+          <section class="panel side-panel panel-left">
+            <div class="assistant-card">
+              <div class="assistant-stage">
+                <div class="assistant-portrait-panel">
+                  <div class="assistant-portrait-shell">
+                    <img
+                      id="assistantPortrait"
+                      class="assistant-portrait"
+                      src="/Downloads/hermione_emotions_tiles_1x4_trimmed/serious.png"
+                      alt="赫敏立绘"
+                    />
+                  </div>
+                  <div id="assistantMood" class="assistant-mood">冷静指引</div>
+                </div>
+                <div class="assistant-copy">
+                  <p class="section-kicker">店员助手</p>
+                  <strong id="assistantName">赫敏</strong>
+                  <div class="assistant-bubble">
+                    <p id="assistantLine" class="assistant-line">店主，今天先把第一张订单做出来，我会继续盯着猫头鹰来信。</p>
+                  </div>
+                  <div class="assistant-meta">
+                    <span id="assistantFocus">今日重点：先开张</span>
+                    <span id="assistantStatus">店铺仍在筹备期</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel-tabs" id="leftTabs">
+              <button class="panel-tab active" data-panel-tab="orders" type="button">委托</button>
+              <button class="panel-tab" data-panel-tab="sources" type="button">补给</button>
+              <button class="panel-tab" data-panel-tab="events" type="button">异象</button>
+            </div>
+
+            <div class="tab-panels">
+              <section class="tab-panel active" data-panel-view="orders">
+                <div id="orderCard" class="order-card"></div>
+              </section>
+
+              <section class="tab-panel" data-panel-view="sources">
+                <div id="sourceList" class="source-list"></div>
+              </section>
+
+              <section class="tab-panel" data-panel-view="events">
+                <div id="dailyEventCard" class="event-card"></div>
+              </section>
+            </div>
+          </section>
+        </aside>
+      </main>
+
+      <div class="sr-only" aria-hidden="true">
+        <span id="schoolStatusText">今日校园平稳</span>
+        <span id="schoolStatusDetail">学院中暂时没有新的传闻，适合专心整理工作台。</span>
+      </div>
+
+      <section id="introOverlay" class="intro-overlay" hidden>
+        <div class="intro-backdrop"></div>
+        <div class="intro-card" role="dialog" aria-modal="true" aria-labelledby="introSpeaker">
+          <p class="section-kicker">入场序章</p>
+          <div class="intro-scene">有求必应屋 · 课后委托局</div>
+          <h2 id="introSpeaker">麦格教授</h2>
+          <p id="introText" class="intro-text">
+            霍格沃茨里总有一些上不了正式课程流程、却又不能放着不管的小需求。坏掉的练习物件、临时缺的草药材料、社团急用的小道具，最后都会被送到这里。
+          </p>
+          <div id="introStep" class="intro-step">1 / 4</div>
+          <div class="intro-actions">
+            <button id="introSkip" class="secondary-button" type="button">跳过</button>
+            <button id="introNext" class="primary-button" type="button">下一句</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="reportOverlay" class="report-overlay" hidden>
+        <div class="report-backdrop"></div>
+        <div class="report-card" role="dialog" aria-modal="true" aria-labelledby="reportTitle">
+          <p class="section-kicker" id="reportDayLabel">经营回顾</p>
+          <h2 id="reportTitle">开张成功</h2>
+          <p id="reportSubtitle" class="report-subtitle">你的店铺已经正式开门，继续经营就能慢慢把整个世界的货物流转带起来。</p>
+          <div class="report-metrics">
+            <div class="report-metric">
+              <span class="stat-label" id="reportMetricLabelA">收入</span>
+              <strong id="reportMetricValueA">0</strong>
+            </div>
+            <div class="report-metric">
+              <span class="stat-label" id="reportMetricLabelB">订单</span>
+              <strong id="reportMetricValueB">0</strong>
+            </div>
+            <div class="report-metric">
+              <span class="stat-label" id="reportMetricLabelC">发现</span>
+              <strong id="reportMetricValueC">0</strong>
+            </div>
+          </div>
+          <p id="reportAssistantLine" class="report-assistant">赫敏：接下来我会继续帮你盯订单和新货源，店主只要把今天的节奏带起来就行。</p>
+          <div class="report-actions">
+            <button id="closeReportButton" class="primary-button" type="button">开始今天营业</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="itemDetailOverlay" class="item-detail-overlay" hidden>
+        <div class="item-detail-backdrop"></div>
+        <div class="item-detail-card" role="dialog" aria-modal="true" aria-labelledby="itemDetailTitle">
+          <button id="closeItemDetailButton" class="ghost-button item-detail-close" type="button">关闭</button>
+          <div class="item-detail-head">
+            <div class="item-detail-art-shell">
+              <img id="itemDetailImage" class="item-detail-image" alt="" />
+            </div>
+            <div class="item-detail-copy">
+              <p id="itemDetailChain" class="section-kicker">草药课</p>
+              <h2 id="itemDetailTitle">曼德拉草幼苗</h2>
+              <p id="itemDetailSubtitle" class="item-detail-subtitle">还不会尖叫，但已经很有脾气。</p>
+              <div class="item-detail-tags">
+                <span id="itemDetailTier" class="item-detail-tag">1 级货品</span>
+                <span id="itemDetailRarity" class="item-detail-tag">常规库存</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="item-detail-grid">
+            <article class="item-detail-block">
+              <p class="section-kicker">获取方式</p>
+              <p id="itemDetailSource" class="item-detail-text"></p>
+            </article>
+            <article class="item-detail-block">
+              <p class="section-kicker">店内用途</p>
+              <p id="itemDetailUse" class="item-detail-text"></p>
+            </article>
+            <article class="item-detail-block">
+              <p class="section-kicker">店员备注</p>
+              <p id="itemDetailNote" class="item-detail-text"></p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="libraryOverlay" class="library-overlay" hidden>
+        <div class="library-backdrop"></div>
+        <div class="library-page" role="dialog" aria-modal="true" aria-labelledby="libraryTitle">
+          <div class="library-topbar">
+            <div>
+              <p class="section-kicker">馆藏页面</p>
+              <h2 id="libraryTitle">奖品室与收集册</h2>
+            </div>
+            <button id="closeLibraryButton" class="ghost-button" type="button">返回工作台</button>
+          </div>
+
+          <div class="library-tabs" id="libraryTabs">
+            <button class="library-tab active" data-library-view="shelf" type="button">收藏</button>
+            <button class="library-tab" data-library-view="codex" type="button">图鉴</button>
+          </div>
+
+          <div class="library-content">
+            <section class="library-panel active" data-library-panel="shelf">
+              <div id="shelfList" class="shelf-list library-grid"></div>
+            </section>
+
+            <section class="library-panel" data-library-panel="codex">
+              <div id="codexList" class="codex-list library-grid"></div>
+            </section>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <section id="creatorOverlay" class="creator-page">
+      <div class="creator-page-shell" aria-labelledby="creatorTitle">
+        <p id="creatorWorldEyebrow" class="sr-only">霍格沃茨 · 世界商店创建</p>
+        <div id="creatorPhaseChip" class="creator-phase-chip" hidden>建店前夜</div>
+        <h2 id="creatorTitle" class="sr-only">世界商店创建</h2>
+
+        <section id="creatorIdeaStep" class="creator-step">
+          <div class="creator-center-wrap">
+            <div class="creator-entry-minimal-shell">
+              <p class="creator-entry-line" id="creatorNarration">
+                这个世界正在有条不紊地建设中。为了持续获得建设资源，你决定先开一间主体店铺。想开什么店铺？
+              </p>
+              <div class="creator-auth-row">
+                <div class="creator-auth-copy">
+                  <strong id="netaAuthStatus" class="creator-auth-status">尚未连接 Neta</strong>
+                  <span id="netaAuthHint" class="creator-auth-hint">先连接 Neta，建店草案和角色对话才会走平台 LLM。</span>
+                  <span id="creatorAgentHint" class="creator-agent-hint">当前 Agent：读取中</span>
+                </div>
+                <div class="creator-auth-actions">
+                  <button id="llmProbeButton" class="secondary-button" type="button" disabled>测试 LLM</button>
+                  <button id="netaAuthButton" class="secondary-button" type="button">连接 Neta</button>
+                </div>
+              </div>
+              <div id="llmProbeResult" class="creator-probe-result" hidden></div>
+              <div class="creator-input-stack">
+                <textarea
+                  id="shopIdeaInput"
+                  class="creator-input creator-input-minimal"
+                  rows="3"
+                  placeholder="例如：专卖禁林夜间采集物的月光杂货店"
+                ></textarea>
+                <div class="creator-input-submit">
+                  <button id="generateConceptButton" class="primary-button" type="button">继续</button>
+                </div>
+              </div>
+              <div id="creatorLlmStatus" class="creator-llm-status" hidden></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="creatorConfirmStep" class="creator-step" hidden>
+          <div class="creator-center-wrap">
+            <div class="creator-summary-card creator-summary-card-centered">
+              <p class="section-kicker">建店草案</p>
+              <h3 id="conceptShopName">夜巡奇物铺</h3>
+              <p id="conceptSummary" class="creator-summary-text"></p>
+              <div class="creator-summary-grid">
+                <article class="creator-summary-block">
+                  <p class="section-kicker">店员助手</p>
+                  <strong id="conceptAssistantName">赫敏</strong>
+                  <p id="conceptAssistantSummary" class="creator-summary-mini"></p>
+                </article>
+                <article class="creator-summary-block">
+                  <p class="section-kicker">经营定位</p>
+                  <p id="conceptLoopSummary" class="creator-summary-mini"></p>
+                </article>
+              </div>
+              <div class="creator-actions creator-actions-equal">
+                <button id="backToIdeaButton" class="secondary-button" type="button">重想一下</button>
+                <button id="startBuildButton" class="primary-button" type="button">就开这家</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="creatorBuildingStep" class="creator-step" hidden>
+          <div id="creatorVisualNovel" class="creator-visual-novel">
+            <div class="creator-stage-scene">
+              <div class="creator-stage-aura"></div>
+              <div class="creator-stage-frame">
+                <img id="loadingAssistantPortrait" class="creator-assistant-art" alt="店员助手立绘" />
+                <div id="portraitLoadingCard" class="creator-portrait-loading" hidden>
+                  <strong id="portraitLoadingTitle">等待助手到来</strong>
+                  <span id="portraitLoadingStatus">正在生成角色立绘</span>
+                </div>
+              </div>
+              <div class="creator-stage-nameplate">
+                <strong id="loadingAssistantName">赫敏</strong>
+                <span id="loadingAssistantRole">店员助手</span>
+              </div>
+            </div>
+
+            <div id="creatorDialogueCard" class="creator-dialogue-card">
+              <div class="creator-dialogue-head">
+                <strong id="loadingDialogueSpeaker">赫敏</strong>
+                <button id="toggleHistoryButton" class="creator-history-toggle" type="button">
+                  对话记录
+                </button>
+              </div>
+
+              <div id="creatorBuildProgress" class="creator-build-progress" aria-label="建店进度">
+                <div class="creator-build-progress-head">
+                  <span>建店进度</span>
+                  <strong id="creatorBuildProgressMeta">等待开始</strong>
+                </div>
+                <div class="creator-build-progress-bar" aria-hidden="true">
+                  <div id="creatorBuildProgressFill" class="creator-build-progress-fill"></div>
+                </div>
+                <div id="creatorBuildProgressSteps" class="creator-build-progress-steps"></div>
+              </div>
+
+              <div id="playerPromptEcho" class="creator-player-echo" hidden></div>
+              <p id="loadingDialogueText" class="creator-dialogue-text">
+                我先把这家店的柜台、助手位置和第一批货线整理出来。
+              </p>
+
+              <div id="buildActionRow" class="creator-actions creator-actions-inline" hidden>
+                <button id="enterShopButton" class="primary-button" type="button">进入店铺</button>
+                <button id="rebuildShopButton" class="secondary-button" type="button">重新建一家</button>
+              </div>
+
+              <div id="historyPanel" class="creator-history-panel" hidden>
+                <div id="historyList" class="creator-history-list"></div>
+              </div>
+            </div>
+
+            <div id="loadingInputRow" class="creator-chat-dock">
+              <input
+                id="loadingChatInput"
+                class="creator-chat-input"
+                type="text"
+                placeholder="输入一句想问赫敏的话"
+              />
+              <button id="sendLoadingChatButton" class="secondary-button creator-send-button" type="button">发送</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <div id="dragLayer" class="drag-layer" aria-hidden="true"></div>
+    <div id="toastStack" class="toast-stack" aria-live="polite"></div>
+
+    <script>
+      window.__mvpBooted = false;
+      window.setTimeout(() => {
+        if (window.__mvpBooted) return;
+
+        const overlay = document.getElementById("introOverlay");
+        const speaker = document.getElementById("introSpeaker");
+        const text = document.getElementById("introText");
+        const step = document.getElementById("introStep");
+        const next = document.getElementById("introNext");
+        const skip = document.getElementById("introSkip");
+        const storageKey = "witch-curio_shop_mvp_v4_hp";
+
+        if (!overlay || !speaker || !text || !step || !next || !skip) return;
+
+        const sequence = [
+          {
+            speaker: "麦格教授",
+            text:
+              "霍格沃茨里总有一些上不了正式课程流程、却又不能放着不管的小需求。坏掉的练习物件、临时缺的草药材料、社团急用的小道具，最后都会被送到这里。",
+          },
+          {
+            speaker: "旁白",
+            text:
+              "久而久之，有求必应屋里形成了一处半公开的课后委托局。它不是商店，更像学校内部一处专门整理、拼配与修复魔法物件的后勤角落。",
+          },
+          {
+            speaker: "赫敏",
+            text:
+              "原本负责这里的人这周不在，可今晚又有学院展示和几封猫头鹰加急委托。教授们没空细管，所以你得先顶上，把这里重新运转起来。",
+          },
+          {
+            speaker: "麦格教授",
+            text:
+              "先别想着做多复杂的东西。去补一点草药材料，把两个相同物件合成出第一份泡泡豆荚，再完成第一张委托。只要柜台动起来，后面的事就好办了。",
+          },
+        ];
+
+        let index = 0;
+
+        const writeIntroSeen = () => {
+          try {
+            const raw = window.localStorage.getItem(storageKey);
+            const parsed = raw ? JSON.parse(raw) : { version: 3 };
+            parsed.introSeen = true;
+            window.localStorage.setItem(storageKey, JSON.stringify(parsed));
+          } catch (error) {
+            console.error("Fallback intro save failed", error);
+          }
+        };
+
+        const renderFallback = () => {
+          overlay.hidden = false;
+          speaker.textContent = sequence[index].speaker;
+          text.textContent = sequence[index].text;
+          step.textContent = `${index + 1} / ${sequence.length}`;
+          next.textContent = index === sequence.length - 1 ? "开始整理" : "下一句";
+        };
+
+        next.onclick = () => {
+          if (index < sequence.length - 1) {
+            index += 1;
+            renderFallback();
+            return;
+          }
+          writeIntroSeen();
+          overlay.hidden = true;
+        };
+
+        skip.onclick = () => {
+          writeIntroSeen();
+          overlay.hidden = true;
+        };
+
+        renderFallback();
+      }, 250);
+    </script>
+    <script src="./neta-config.js"></script>
+    <script src="./neta-auth.js"></script>
+    <script src="./app.js"></script>
+    <script src="./creator.js"></script>
+  </body>
+</html>

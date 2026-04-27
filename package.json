@@ -1,0 +1,15 @@
+{
+  "name": "witch-curio-shop-mvp-2",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "start:local-worker": "node builder/local-codex-worker.mjs",
+    "start:remote-agent": "node builder/mock-remote-agent.mjs"
+  },
+  "dependencies": {
+    "pngjs": "^7.0.0",
+    "undici": "^8.1.0"
+  }
+}
