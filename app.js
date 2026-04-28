@@ -23,7 +23,7 @@ const DEFAULT_SHOP_THEME = {
   shopBgMid: "#f5dfa1",
   shopBgBottom: "#d0ab71",
   shopLight: "#f6d88f",
-  shopLightSoft: "rgba(246, 216, 143, 0.24)",
+  shopLightSoft: "#f6d88f",
   shopPanel: "#fff7e7",
   shopPanel2: "#f5ead0",
   shopPaper: "#fff7e7",
@@ -71,14 +71,14 @@ const SHOP_DECORATION_STICKERS = [
     width: 176,
   },
   {
-    id: "closed-door",
+    id: "wood-floor",
     url: "/generated/shop-stickers/ollivanders-decor/decor_05_wood-floor.png",
     left: 17,
     top: 80,
     width: 176,
   },
   {
-    id: "wood-floor",
+    id: "closed-door",
     url: "/generated/shop-stickers/ollivanders-decor/decor_06_closed-door.png",
     left: 20,
     top: 83,
@@ -221,7 +221,7 @@ const DEFAULT_ITEM_CHAINS = [
   {
     id: "botanical",
     label: "基础货线",
-    colors: ["#9dcea7", "#395f40"],
+    colors: [],
     rareFromTier: 4,
     blendable: true,
     items: [
@@ -236,7 +236,7 @@ const DEFAULT_ITEM_CHAINS = [
   {
     id: "alchemy",
     label: "加工货线",
-    colors: ["#d9b06a", "#87562f"],
+    colors: [],
     rareFromTier: 4,
     blendable: true,
     items: [
@@ -251,7 +251,7 @@ const DEFAULT_ITEM_CHAINS = [
   {
     id: "curio",
     label: "风味货线",
-    colors: ["#c7abd8", "#5c3f72"],
+    colors: [],
     rareFromTier: 4,
     blendable: true,
     items: [
@@ -266,7 +266,7 @@ const DEFAULT_ITEM_CHAINS = [
   {
     id: "waste",
     label: "事故",
-    colors: ["#bbb5ac", "#625b54"],
+    colors: [],
     rareFromTier: 99,
     blendable: false,
     items: [
@@ -281,7 +281,7 @@ const DEFAULT_ITEM_CHAINS = [
   {
     id: "secret",
     label: "隐藏货线",
-    colors: ["#c8dcf4", "#4f6d8d"],
+    colors: [],
     rareFromTier: 1,
     blendable: false,
     items: [
@@ -1720,11 +1720,26 @@ function buildFallbackArtMarkup(className = "item-art") {
 }
 
 function getItemTint(item) {
-  return hexToRgba(item.colors[0], 0.18);
+  const color = item.colors?.[0];
+  if (!color) return `color-mix(in srgb, ${getChainThemeColor(item.chainId)} 18%, transparent)`;
+  return hexToRgba(color, 0.18);
 }
 
 function getItemSolidTint(item) {
-  return mixHexColors(item.colors[0], "#f7ead3", 0.24);
+  const color = item.colors?.[0];
+  if (!color) return `color-mix(in srgb, ${getChainThemeColor(item.chainId)} 24%, var(--shop-card))`;
+  return `color-mix(in srgb, ${color} 24%, var(--shop-card))`;
+}
+
+function getChainThemeColor(chainId) {
+  const themeColorMap = {
+    botanical: "var(--shop-green)",
+    alchemy: "var(--shop-gold)",
+    curio: "var(--shop-light)",
+    waste: "var(--shop-muted)",
+    secret: "var(--shop-gold-soft)",
+  };
+  return themeColorMap[chainId] || "var(--shop-gold-soft)";
 }
 
 function hexToRgba(hex, alpha) {

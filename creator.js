@@ -108,6 +108,9 @@
     loadingChatInput: document.getElementById("loadingChatInput"),
     loadingInputRow: document.getElementById("loadingInputRow"),
     sendLoadingChatButton: document.getElementById("sendLoadingChatButton"),
+    buildRecoveryRow: document.getElementById("buildRecoveryRow"),
+    retryBuildButton: document.getElementById("retryBuildButton"),
+    reviseBuildButton: document.getElementById("reviseBuildButton"),
     buildActionRow: document.getElementById("buildActionRow"),
     enterShopButton: document.getElementById("enterShopButton"),
     rebuildShopButton: document.getElementById("rebuildShopButton"),
@@ -544,15 +547,14 @@
         );
     const fillPercent = (fillUnits / BUILD_PROGRESS_STEPS.length) * 100;
 
-    let metaText = "等店员到岗";
+    let activeLabel = activeIndex >= 0 ? BUILD_PROGRESS_STEPS[activeIndex]?.label || "等店员到岗" : "等店员到岗";
+    let metaText = activeLabel;
     if (state.buildFailed) {
-      metaText = "开张暂停";
+      metaText = `暂停在：${activeLabel}`;
     } else if (state.buildBlocked) {
-      metaText = "还缺一件东西";
+      metaText = `待补齐：${activeLabel}`;
     } else if (state.buildReady) {
       metaText = "可以开门";
-    } else if (activeIndex >= 0) {
-      metaText = `${completedCount} / ${BUILD_PROGRESS_STEPS.length} 已备好`;
     }
 
     return {
@@ -560,6 +562,7 @@
       completedCount,
       fillPercent,
       metaText,
+      activeLabel,
     };
   }
 
@@ -568,16 +571,16 @@
     const snapshot = getBuildProgressSnapshot();
     elements.buildProgressMeta.textContent = snapshot.metaText;
     elements.buildProgressFill.style.width = `${snapshot.fillPercent}%`;
-    elements.buildProgressSteps.innerHTML = snapshot.steps
-      .map(
-        (step) => `
-          <div class="creator-build-progress-step is-${step.status}">
-            <span class="creator-build-progress-dot" aria-hidden="true"></span>
-            <span class="creator-build-progress-label">${step.label}</span>
-          </div>
-        `,
-      )
-      .join("");
+    let lastCompletedStep = null;
+    snapshot.steps.forEach((step) => {
+      if (step.status === "completed") lastCompletedStep = step;
+    });
+    const activeStep = snapshot.steps.find((step) => step.status === "current" || step.status === "blocked" || step.status === "failed")
+      || lastCompletedStep
+      || snapshot.steps[0];
+    elements.buildProgressSteps.innerHTML = activeStep
+      ? `<span class="creator-build-progress-label is-${activeStep.status}">${activeStep.label}</span>`
+      : "";
   }
 
   function showIdeaLlmLoading(baseText) {
@@ -1135,7 +1138,9 @@
     elements.loadingInputRow.hidden = false;
     elements.loadingChatInput.disabled = false;
     elements.sendLoadingChatButton.disabled = false;
-    elements.loadingChatInput.placeholder = `输入一句想问${state.concept?.assistantName || "店员"}的话`;
+    elements.loadingChatInput.placeholder = state.buildBlocked || state.buildFailed
+      ? "告诉店员要怎么改，或直接点下方重试"
+      : `输入一句想问${state.concept?.assistantName || "店员"}的话`;
   }
 
   function disableLoadingChat(options = {}) {
@@ -1143,6 +1148,20 @@
     elements.loadingInputRow.hidden = hidden;
     elements.loadingChatInput.disabled = true;
     elements.sendLoadingChatButton.disabled = true;
+  }
+
+  function showBuildRecovery() {
+    if (!elements.buildRecoveryRow) return;
+    elements.buildRecoveryRow.hidden = false;
+    if (elements.retryBuildButton) elements.retryBuildButton.disabled = false;
+    if (elements.reviseBuildButton) elements.reviseBuildButton.disabled = false;
+  }
+
+  function hideBuildRecovery() {
+    if (!elements.buildRecoveryRow) return;
+    elements.buildRecoveryRow.hidden = true;
+    if (elements.retryBuildButton) elements.retryBuildButton.disabled = false;
+    if (elements.reviseBuildButton) elements.reviseBuildButton.disabled = false;
   }
 
   function setDialogue({ speaker, text, prompt, record = true }) {
@@ -1262,6 +1281,7 @@
     }
     disableLoadingChat({ hidden: false });
     elements.buildActionRow.hidden = true;
+    hideBuildRecovery();
     elements.playerPromptEcho.hidden = true;
     elements.playerPromptEcho.textContent = "";
     elements.loadingChatInput.value = "";
@@ -1278,6 +1298,7 @@
       elements.creatorDialogueCard.hidden = false;
     }
     elements.buildActionRow.hidden = false;
+    hideBuildRecovery();
     setDialogue({
       speaker: state.concept.assistantName || "店员",
       text: "门已经擦亮，货也摆上了。现在可以进店，看看这家店真正开张后的样子。",
@@ -1332,6 +1353,7 @@
       state.currentStageLabel = payload.label || "";
       state.buildBlocked = false;
       state.buildFailed = false;
+      hideBuildRecovery();
       pushBuildTimeline({
         type: "stage",
         label: payload.label || "",
@@ -1371,6 +1393,7 @@
         elements.creatorDialogueCard.hidden = false;
       }
       enableLoadingChat();
+      showBuildRecovery();
       state.buildBlocked = true;
       state.buildReady = false;
       pushBuildTimeline({
@@ -1392,8 +1415,8 @@
       setDialogue({
         speaker: "柜台暂停",
         text: isThemeBlocked
-          ? "这家店的界面配色还没准备完整，先别急着进店。"
-          : "当前还缺一件开张要用的东西，先别急着进店。",
+          ? "这家店的界面配色还没准备完整。你可以让店员按原方案重试，也可以在输入框里补一句修改建议。"
+          : "当前还缺一件开张要用的东西。你可以让店员按原方案重试，也可以在输入框里补一句修改建议。",
       });
       showCreatorToast(isThemeBlocked ? "主题还没定好" : "还缺东西", isThemeBlocked ? "界面配色还缺几项，准备完整后才能进店。" : "有一件开张用品还没送到，先等它补齐。");
       renderBuildProgress();
@@ -1406,6 +1429,7 @@
         elements.creatorDialogueCard.hidden = false;
       }
       enableLoadingChat();
+      showBuildRecovery();
       state.buildFailed = true;
       state.buildBlocked = false;
       state.buildReady = false;
@@ -1422,7 +1446,7 @@
       elements.buildActionRow.hidden = true;
       setDialogue({
         speaker: "柜台暂停",
-        text: "开张准备卡住了。你可以继续问店员，或者重新开一家。",
+        text: "开张准备卡住了。你可以问店员发生了什么，也可以直接重试；如果想改方向，就在输入框里写一句建议再重试。",
       });
       closeBuildStream();
       showCreatorToast("开张卡住了", "这轮准备没有顺利完成。");
@@ -1636,16 +1660,30 @@
     }
   }
 
-  async function handleStartBuild() {
+  async function handleStartBuild(options = {}) {
+    const { retry = false, revision = "" } = options;
+    const previousJobId = state.jobId;
+    const nextShopIdea = [state.concept?.shopIdea, revision ? `补充建议：${revision}` : ""]
+      .filter(Boolean)
+      .join("\n");
     console.log("[creator] start-build:click", {
       hasConcept: Boolean(state.concept),
       currentStep: elements.page?.dataset?.step,
+      retry,
+      hasRevision: Boolean(revision),
     });
     if (!state.concept) return;
     if (!(await ensureNetaAuth())) return;
 
     elements.startBuildButton.disabled = true;
     elements.backToIdeaButton.disabled = true;
+
+    if (revision) {
+      applyBuildConceptPatch({
+        shopIdea: nextShopIdea,
+        loopSummary: `${state.concept.loopSummary || "开张方案已确认。"} 店员会按你的补充建议调整这轮准备。`,
+      });
+    }
 
     resetBuildView();
     showAwaitingAgentState(state.concept);
@@ -1655,8 +1693,10 @@
         method: "POST",
         body: JSON.stringify({
           worldName: state.defaults.worldName,
-          shopIdea: state.concept.shopIdea,
+          shopIdea: nextShopIdea,
           concept: state.concept,
+          retryOfJobId: retry ? previousJobId : null,
+          revision: revision || "",
         }),
       });
       state.jobId = payload.jobId;
@@ -1672,6 +1712,20 @@
       elements.startBuildButton.disabled = false;
       elements.backToIdeaButton.disabled = false;
     }
+  }
+
+  async function handleRetryBuild({ withRevision = false } = {}) {
+    if (!state.concept) return;
+    const revision = withRevision ? elements.loadingChatInput.value.trim() : "";
+    if (withRevision && !revision) {
+      showCreatorToast("先写一句建议", "在输入框里告诉店员这轮要怎么改，再带建议重试。 ");
+      elements.loadingChatInput.focus();
+      return;
+    }
+    hideBuildRecovery();
+    if (elements.retryBuildButton) elements.retryBuildButton.disabled = true;
+    if (elements.reviseBuildButton) elements.reviseBuildButton.disabled = true;
+    await handleStartBuild({ retry: true, revision });
   }
 
   async function handleLoadingChat() {
@@ -1853,6 +1907,8 @@
   elements.backToIdeaButton.addEventListener("click", () => setStep("idea"));
   elements.startBuildButton.addEventListener("click", handleStartBuild);
   elements.sendLoadingChatButton.addEventListener("click", handleLoadingChat);
+  elements.retryBuildButton?.addEventListener("click", () => handleRetryBuild({ withRevision: false }));
+  elements.reviseBuildButton?.addEventListener("click", () => handleRetryBuild({ withRevision: true }));
   elements.toggleHistoryButton.addEventListener("click", () => {
     state.historyOpen = !state.historyOpen;
     syncHistoryVisibility();

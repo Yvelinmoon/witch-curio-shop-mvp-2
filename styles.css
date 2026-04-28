@@ -4,7 +4,7 @@
   --shop-bg-mid: #f5dfa1;
   --shop-bg-bottom: #d0ab71;
   --shop-light: #f6d88f;
-  --shop-light-soft: rgba(246, 216, 143, 0.24);
+  --shop-light-soft: color-mix(in srgb, var(--shop-light) 24%, transparent);
   --shop-panel: #fff7e7;
   --shop-panel-2: #f5ead0;
   --shop-paper: #fff7e7;
@@ -20,23 +20,67 @@
   --shop-text: #4a3728;
   --shop-ink: #3a2414;
   --shop-muted: #b89964;
-  --shop-shadow: 0 7px 0 0 rgba(20, 11, 7, 0.82);
-  --shop-panel-shadow: 0 18px 42px rgba(7, 4, 3, 0.48);
-  --bg-top: #faefc9;
-  --bg-bottom: #d7b57c;
-  --paper: #fff7e7;
-  --paper-soft: #f5ead0;
+  --shop-shadow: 0 7px 0 0 color-mix(in srgb, var(--shop-ink) 82%, black 18%);
+  --shop-panel-shadow: 0 18px 42px color-mix(in srgb, var(--shop-ink) 48%, transparent);
+  --shop-bg-glow-a: color-mix(in srgb, var(--shop-light) 42%, transparent);
+  --shop-bg-glow-b: color-mix(in srgb, var(--shop-border-dark) 52%, transparent);
+  --shop-bg-line: color-mix(in srgb, var(--shop-light) 7%, transparent);
+  --shop-sheen: color-mix(in srgb, var(--shop-panel) 58%, transparent);
+  --shop-sheen-strong: color-mix(in srgb, var(--shop-panel) 82%, transparent);
+  --shop-shadow-soft: color-mix(in srgb, var(--shop-border-dark) 16%, transparent);
+  --shop-shadow-mid: color-mix(in srgb, var(--shop-border-dark) 34%, transparent);
+  --shop-shadow-strong: color-mix(in srgb, var(--shop-border-dark) 76%, black 24%);
+  --shop-shadow-deep: color-mix(in srgb, var(--shop-ink) 72%, black 28%);
+  --shop-board-border: color-mix(in srgb, var(--shop-border-dark) 88%, black 12%);
+  --shop-board-top: color-mix(in srgb, var(--shop-gold-soft) 68%, var(--shop-panel));
+  --shop-board-mid: color-mix(in srgb, var(--shop-gold) 62%, var(--shop-border));
+  --shop-board-bottom: color-mix(in srgb, var(--shop-border-dark) 88%, var(--shop-gold) 12%);
+  --shop-board-slot: color-mix(in srgb, var(--shop-border-dark) 36%, transparent);
+  --shop-board-slot-line: color-mix(in srgb, var(--shop-light) 18%, transparent);
+  --shop-tile-default: color-mix(in srgb, var(--shop-card) 82%, var(--shop-gold-soft));
+  --shop-tile-selected: color-mix(in srgb, var(--shop-gold-soft) 72%, var(--shop-card));
+  --shop-tile-drop: color-mix(in srgb, var(--shop-gold) 72%, var(--shop-card));
+  --shop-waste-bg-a: color-mix(in srgb, var(--shop-border-dark) 72%, var(--shop-muted));
+  --shop-waste-bg-b: color-mix(in srgb, var(--shop-border-dark) 86%, black 14%);
+  --shop-waste-ink: color-mix(in srgb, var(--shop-paper) 72%, var(--shop-muted));
+  --shop-rare-bg-a: color-mix(in srgb, var(--shop-card) 88%, var(--shop-green));
+  --shop-rare-bg-b: color-mix(in srgb, var(--shop-paper-soft) 78%, var(--shop-green));
+  --shop-rare-ink: color-mix(in srgb, var(--shop-green) 72%, var(--shop-ink));
+  --shop-rare-shine: color-mix(in srgb, var(--shop-panel) 78%, transparent);
+  --shop-legendary-bg-a: color-mix(in srgb, var(--shop-card) 88%, var(--shop-gold-soft));
+  --shop-legendary-bg-b: color-mix(in srgb, var(--shop-paper-soft) 72%, var(--shop-gold));
+  --shop-legendary-ink: color-mix(in srgb, var(--shop-gold) 70%, var(--shop-ink));
+  --shop-legendary-shine: color-mix(in srgb, var(--shop-panel) 82%, transparent);
+  --shop-dark-card: color-mix(in srgb, var(--shop-border-dark) 82%, var(--shop-gold) 18%);
+  --shop-dark-card-2: color-mix(in srgb, var(--shop-ink) 86%, black 14%);
+  --shop-bubble: color-mix(in srgb, var(--shop-card) 88%, var(--shop-gold-soft));
+  --shop-order-bg: color-mix(in srgb, var(--shop-card) 70%, var(--shop-gold-soft));
+  --shop-order-ink: color-mix(in srgb, var(--shop-ink) 86%, black 14%);
+  --shop-source-bg: color-mix(in srgb, var(--shop-dark-card) 82%, var(--shop-gold) 18%);
+  --shop-button-bg-top: color-mix(in srgb, var(--shop-gold-soft) 84%, var(--shop-panel));
+  --shop-button-bg-bottom: color-mix(in srgb, var(--shop-gold) 76%, var(--shop-border-dark));
+  --shop-button-ink: color-mix(in srgb, var(--shop-ink) 84%, black 16%);
+  --shop-secondary-bg: color-mix(in srgb, var(--shop-gold-soft) 48%, var(--shop-panel-2));
+  --shop-overlay: color-mix(in srgb, var(--shop-ink) 72%, transparent);
+  --shop-overlay-soft: color-mix(in srgb, var(--shop-border-dark) 46%, transparent);
+  --shop-error-bg: color-mix(in srgb, var(--shop-red) 18%, var(--shop-paper));
+  --shop-success-bg: color-mix(in srgb, var(--shop-green) 20%, var(--shop-paper));
+  --shop-focus-ring: color-mix(in srgb, var(--shop-green) 22%, transparent);
+  --bg-top: var(--shop-bg-top);
+  --bg-bottom: var(--shop-bg-bottom);
+  --paper: var(--shop-paper);
+  --paper-soft: var(--shop-paper-soft);
   --wood: var(--shop-border-dark);
   --wood-soft: var(--shop-muted);
   --gold: var(--shop-gold);
   --gold-soft: var(--shop-gold-soft);
   --green: var(--shop-green);
-  --green-soft: #dce9cd;
+  --green-soft: color-mix(in srgb, var(--shop-green) 22%, var(--shop-paper));
   --danger: var(--shop-red);
   --text: var(--shop-text);
   --muted: var(--shop-muted);
   --shadow: var(--shop-shadow);
-  --panel-shadow: 0 10px 28px rgba(75, 56, 41, 0.14);
+  --panel-shadow: 0 10px 28px var(--shop-shadow-soft);
   --radius: 22px;
   --transition: 180ms ease;
   --board-size: min(54vh, 560px);
@@ -59,9 +103,9 @@ body {
 body {
   min-height: 100vh;
   background:
-    radial-gradient(circle at 68% 18%, rgba(242, 199, 118, 0.22), transparent 23%),
-    radial-gradient(circle at 20% 92%, rgba(111, 69, 35, 0.48), transparent 34%),
-    repeating-linear-gradient(90deg, rgba(255, 227, 157, 0.035) 0 1px, transparent 1px 38px),
+    radial-gradient(circle at 68% 18%, var(--shop-bg-glow-a), transparent 23%),
+    radial-gradient(circle at 20% 92%, var(--shop-bg-glow-b), transparent 34%),
+    repeating-linear-gradient(90deg, var(--shop-bg-line) 0 1px, transparent 1px 38px),
     linear-gradient(180deg, var(--shop-bg-top) 0%, var(--shop-bg-mid) 42%, var(--shop-bg-bottom) 100%);
   color: var(--shop-text);
   font-family: "Avenir Next", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
@@ -99,7 +143,7 @@ button {
   right: -40px;
   width: 240px;
   height: 240px;
-  background: radial-gradient(circle, rgba(241, 193, 105, 0.58), transparent 70%);
+  background: radial-gradient(circle, var(--shop-bg-glow-a), transparent 70%);
 }
 
 .glow-b {
@@ -107,7 +151,7 @@ button {
   left: -30px;
   width: 220px;
   height: 220px;
-  background: radial-gradient(circle, rgba(102, 64, 31, 0.58), transparent 72%);
+  background: radial-gradient(circle, var(--shop-bg-glow-b), transparent 72%);
 }
 
 .shop-decorations {
@@ -149,7 +193,7 @@ button {
   width: 100%;
   height: auto;
   object-fit: contain;
-  filter: drop-shadow(0 8px 0 rgba(75, 56, 41, 0.12)) drop-shadow(0 12px 16px rgba(75, 56, 41, 0.14));
+  filter: drop-shadow(0 8px 0 var(--shop-shadow-soft)) drop-shadow(0 12px 16px var(--shop-shadow-soft));
   user-select: none;
   -webkit-user-drag: none;
 }
@@ -160,11 +204,11 @@ button {
   bottom: -7px;
   width: 18px;
   height: 18px;
-  border: 2px solid rgba(75, 56, 41, 0.72);
+  border: 2px solid color-mix(in srgb, var(--shop-border-dark) 72%, transparent);
   border-radius: 999px;
   background:
-    radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.95), rgba(255, 235, 170, 0.92) 46%, rgba(181, 123, 39, 0.96) 100%);
-  box-shadow: 0 2px 0 rgba(75, 56, 41, 0.28), 0 4px 10px rgba(75, 56, 41, 0.18);
+    radial-gradient(circle at 35% 35%, var(--shop-sheen-strong), color-mix(in srgb, var(--shop-light) 62%, var(--shop-panel)) 46%, var(--shop-gold) 100%);
+  box-shadow: 0 2px 0 var(--shop-shadow-mid), 0 4px 10px var(--shop-shadow-soft);
   cursor: nwse-resize;
   opacity: 0;
   transform: scale(0.7);
@@ -241,15 +285,15 @@ button {
 }
 
 .app-shell[data-shop-rank="2"] {
-  --gold: #b77d1e;
+  --gold: color-mix(in srgb, var(--shop-gold) 92%, var(--shop-border-dark));
 }
 
 .app-shell[data-shop-rank="3"] {
-  --gold: #a86717;
+  --gold: color-mix(in srgb, var(--shop-gold) 82%, var(--shop-border-dark));
 }
 
 .app-shell[data-shop-rank="4"] {
-  --gold: #8c5a11;
+  --gold: color-mix(in srgb, var(--shop-gold) 72%, var(--shop-border-dark));
 }
 
 .topbar {
@@ -265,8 +309,8 @@ button {
     radial-gradient(circle at 28% 18%, var(--shop-light-soft), transparent 28%),
     linear-gradient(180deg, var(--shop-panel-2), var(--shop-panel));
   box-shadow:
-    inset 0 2px 0 rgba(255, 255, 255, 0.42),
-    inset 0 -5px 0 rgba(75, 56, 41, 0.14),
+    inset 0 2px 0 var(--shop-sheen),
+    inset 0 -5px 0 var(--shop-shadow-soft),
     var(--shop-shadow),
     var(--shop-panel-shadow);
 }
@@ -277,7 +321,7 @@ button {
   inset: 10px 14px auto;
   height: 26px;
   border-radius: 999px;
-  background: linear-gradient(180deg, rgba(244, 205, 124, 0.2), rgba(255, 255, 255, 0));
+  background: linear-gradient(180deg, var(--shop-light-soft), transparent);
   pointer-events: none;
   z-index: 0;
 }
@@ -294,8 +338,8 @@ button {
     radial-gradient(circle at 22% 16%, var(--shop-light-soft), transparent 30%),
     linear-gradient(180deg, var(--shop-panel-2), var(--shop-panel) 94%);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.42),
-    0 8px 0 rgba(75, 56, 41, 0.18);
+    inset 0 1px 0 var(--shop-sheen),
+    0 8px 0 var(--shop-shadow-soft);
 }
 
 .brand-copy {
@@ -330,7 +374,7 @@ button {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4), 0 0 12px rgba(216, 166, 66, 0.22);
+  text-shadow: 0 1px 0 var(--shop-shadow-mid), 0 0 12px color-mix(in srgb, var(--shop-gold) 22%, transparent);
 }
 
 .brand-title-row {
@@ -345,7 +389,7 @@ button {
   align-items: center;
   gap: 10px;
   margin-top: 7px;
-  color: #d4b477;
+  color: var(--shop-gold-soft);
   font-size: 11px;
 }
 
@@ -354,9 +398,9 @@ button {
   align-items: center;
   gap: 3px;
   padding: 3px 7px;
-  border: 2px solid rgba(216, 166, 66, 0.22);
+  border: 2px solid color-mix(in srgb, var(--shop-gold) 22%, transparent);
   border-radius: 999px;
-  background: rgba(27, 16, 10, 0.58);
+  background: color-mix(in srgb, var(--shop-ink) 58%, transparent);
   color: var(--shop-gold-soft);
   font-weight: 800;
 }
@@ -368,9 +412,9 @@ button {
 .brand-rank-label {
   flex-shrink: 0;
   padding: 3px 7px;
-  border: 2px solid rgba(216, 166, 66, 0.2);
+  border: 2px solid color-mix(in srgb, var(--shop-gold) 20%, transparent);
   border-radius: 999px;
-  background: rgba(216, 166, 66, 0.14);
+  background: color-mix(in srgb, var(--shop-gold) 14%, transparent);
   color: var(--shop-gold-soft);
   font-weight: 700;
   font-size: 10px;
@@ -392,11 +436,11 @@ button {
 }
 
 .brand-gold strong {
-  color: #ffd979;
+  color: var(--shop-light);
   font-size: 20px;
   font-weight: 950;
   letter-spacing: 0.01em;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.56), 0 0 12px rgba(216, 166, 66, 0.34);
+  text-shadow: 0 1px 0 var(--shop-shadow-mid), 0 0 12px color-mix(in srgb, var(--shop-gold) 34%, transparent);
 }
 
 .status-bar {
@@ -418,7 +462,7 @@ button {
     linear-gradient(180deg, color-mix(in srgb, var(--shop-paper) 96%, white 4%), color-mix(in srgb, var(--shop-paper-soft) 94%, transparent)),
     var(--shop-paper-soft);
   box-shadow:
-    inset 0 1px 0 color-mix(in srgb, white 56%, transparent),
+    inset 0 1px 0 var(--shop-sheen),
     0 7px 0 color-mix(in srgb, var(--shop-border-dark) 18%, transparent);
 }
 
@@ -476,7 +520,7 @@ button {
   width: 56px;
   height: 52px;
   object-fit: contain;
-  filter: drop-shadow(0 5px 0 rgba(12, 7, 4, 0.28)) drop-shadow(0 12px 14px rgba(6, 3, 2, 0.38));
+  filter: drop-shadow(0 5px 0 var(--shop-shadow-mid)) drop-shadow(0 12px 14px var(--shop-shadow-mid));
 }
 
 .stat-label {
@@ -494,7 +538,7 @@ button {
   margin-top: 0;
   padding: 1px 5px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--shop-border-dark) 86%, black 14%);
+  background: var(--shop-shadow-strong);
   color: var(--shop-gold-soft);
   font-size: 10px;
   line-height: 1;
@@ -522,8 +566,8 @@ button {
   font-size: 13px;
   white-space: nowrap;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.76),
-    0 7px 0 rgba(75, 56, 41, 0.14);
+    inset 0 1px 0 var(--shop-sheen-strong),
+    0 7px 0 var(--shop-shadow-soft);
 }
 
 .ghost-button:hover,
@@ -550,7 +594,7 @@ button {
   border-radius: 24px;
   min-height: 0;
   background:
-    radial-gradient(circle at 22% 10%, rgba(242, 199, 118, 0.12), transparent 32%),
+    radial-gradient(circle at 22% 10%, color-mix(in srgb, var(--shop-light) 12%, transparent), transparent 32%),
     linear-gradient(180deg, var(--shop-panel-2), var(--shop-panel));
   box-shadow: var(--shop-panel-shadow), var(--shop-shadow);
 }
@@ -566,7 +610,7 @@ button {
   padding: 6px 16px 14px;
   background:
     radial-gradient(circle at 50% 42%, var(--shop-light-soft), transparent 36%),
-    repeating-linear-gradient(90deg, rgba(255, 215, 134, 0.035) 0 1px, transparent 1px 44px),
+    repeating-linear-gradient(90deg, var(--shop-bg-line) 0 1px, transparent 1px 44px),
     linear-gradient(180deg, var(--shop-panel-2), var(--shop-panel) 100%);
 }
 
@@ -588,8 +632,8 @@ button {
   border: 2px solid var(--shop-border-dark);
   border-radius: 16px;
   background:
-    linear-gradient(180deg, rgba(255, 238, 190, 0.28), transparent 28%),
-    #3f2717;
+    linear-gradient(180deg, color-mix(in srgb, var(--shop-light) 28%, transparent), transparent 28%),
+    var(--shop-dark-card-2);
   box-shadow: var(--shop-shadow);
   transition: opacity 180ms ease, transform 180ms ease;
 }
@@ -634,32 +678,32 @@ button {
 
 .app-shell[data-shop-rank="2"] .side-panel {
   background:
-    linear-gradient(180deg, rgba(160, 112, 63, 0.2), transparent 20%),
-    linear-gradient(180deg, #7d5c3c, #624730 100%);
+    linear-gradient(180deg, color-mix(in srgb, var(--shop-gold) 20%, transparent), transparent 20%),
+    linear-gradient(180deg, color-mix(in srgb, var(--shop-border) 80%, var(--shop-gold)), var(--shop-border-dark) 100%);
 }
 
 .app-shell[data-shop-rank="3"] .board-ribbon-ticker {
   background:
-    linear-gradient(180deg, rgba(242, 199, 118, 0.22), transparent 30%),
-    #55331c;
+    linear-gradient(180deg, color-mix(in srgb, var(--shop-light) 22%, transparent), transparent 30%),
+    var(--shop-dark-card);
 }
 
 .app-shell[data-shop-rank="3"] .side-panel {
   background:
-    linear-gradient(180deg, rgba(174, 120, 54, 0.22), transparent 20%),
-    linear-gradient(180deg, #7d5630, #603f25 100%);
+    linear-gradient(180deg, color-mix(in srgb, var(--shop-gold) 22%, transparent), transparent 20%),
+    linear-gradient(180deg, color-mix(in srgb, var(--shop-border) 76%, var(--shop-gold)), color-mix(in srgb, var(--shop-border-dark) 88%, var(--shop-gold)) 100%);
 }
 
 .app-shell[data-shop-rank="4"] .board-ribbon-ticker {
   background:
-    linear-gradient(180deg, rgba(242, 199, 118, 0.26), transparent 28%),
-    #633b1f;
+    linear-gradient(180deg, color-mix(in srgb, var(--shop-light) 26%, transparent), transparent 28%),
+    color-mix(in srgb, var(--shop-dark-card) 86%, var(--shop-gold));
 }
 
 .app-shell[data-shop-rank="4"] .side-panel {
   background:
-    linear-gradient(180deg, rgba(185, 132, 66, 0.26), transparent 18%),
-    linear-gradient(180deg, #7a4e26, #583718 100%);
+    linear-gradient(180deg, color-mix(in srgb, var(--shop-gold) 26%, transparent), transparent 18%),
+    linear-gradient(180deg, color-mix(in srgb, var(--shop-border) 70%, var(--shop-gold)), color-mix(in srgb, var(--shop-border-dark) 92%, var(--shop-gold)) 100%);
 }
 
 .board {
@@ -671,22 +715,22 @@ button {
   margin: 0 auto;
   padding: 10px;
   border-radius: 28px;
-  border: 2px solid #140c07;
+  border: 2px solid var(--shop-board-border);
   background:
-    radial-gradient(circle at 50% 18%, rgba(255, 233, 177, 0.34), transparent 36%),
-    linear-gradient(180deg, #d7b06d, #9b6933 18%, #5b351c 100%);
+    radial-gradient(circle at 50% 18%, color-mix(in srgb, var(--shop-light) 34%, transparent), transparent 36%),
+    linear-gradient(180deg, var(--shop-board-top), var(--shop-board-mid) 18%, var(--shop-board-bottom) 100%);
   box-shadow:
-    inset 0 0 0 3px rgba(255, 219, 143, 0.18),
-    inset 0 18px 28px rgba(255, 235, 184, 0.09),
-    0 10px 0 rgba(14, 8, 5, 0.78),
-    0 24px 42px rgba(5, 3, 2, 0.38);
+    inset 0 0 0 3px color-mix(in srgb, var(--shop-light) 18%, transparent),
+    inset 0 18px 28px color-mix(in srgb, var(--shop-light) 9%, transparent),
+    0 10px 0 var(--shop-shadow-strong),
+    0 24px 42px var(--shop-shadow-mid);
 }
 
 .tile {
   min-height: 0;
   aspect-ratio: 1 / 1;
   border-radius: 18px;
-  background: rgba(33, 19, 10, 0.34);
+  background: var(--shop-board-slot);
 }
 
 .tile::before {
@@ -694,7 +738,7 @@ button {
   position: absolute;
   inset: 5px;
   border-radius: 13px;
-  border: 2px dashed rgba(255, 226, 161, 0.12);
+  border: 2px dashed var(--shop-board-slot-line);
 }
 
 .tile.empty {
@@ -703,7 +747,7 @@ button {
 
 .tile.occupied {
   padding: 6px;
-  background: var(--tile-tint, rgba(232, 209, 166, 0.92));
+  background: var(--tile-tint, var(--shop-tile-default));
   touch-action: none;
   overflow: hidden;
 }
@@ -714,7 +758,7 @@ button {
 }
 
 .tile.selected {
-  background: #f0d188;
+  background: var(--shop-tile-selected);
 }
 
 .tile.dragging {
@@ -722,7 +766,7 @@ button {
 }
 
 .tile.drop-target {
-  background: #d9a74f;
+  background: var(--shop-tile-drop);
 }
 
 .tile.discovery {
@@ -731,13 +775,13 @@ button {
 
 .tile.waste-item {
   background:
-    radial-gradient(circle at 22% 20%, rgba(58, 49, 43, 0.36), transparent 32%),
-    linear-gradient(180deg, rgba(101, 90, 79, 0.92), rgba(72, 63, 56, 0.94));
+    radial-gradient(circle at 22% 20%, color-mix(in srgb, var(--shop-muted) 36%, transparent), transparent 32%),
+    linear-gradient(180deg, var(--shop-waste-bg-a), var(--shop-waste-bg-b));
 }
 
 .tile.waste-item::before {
   border-style: solid;
-  border-color: rgba(255, 240, 214, 0.08);
+  border-color: color-mix(in srgb, var(--shop-paper) 8%, transparent);
 }
 
 .tile.waste-item::after {
@@ -746,9 +790,9 @@ button {
   inset: 7px;
   border-radius: 14px;
   background:
-    linear-gradient(135deg, transparent 18%, rgba(35, 29, 25, 0.48) 18%, transparent 22%, transparent 46%, rgba(35, 29, 25, 0.42) 46%, transparent 51%),
-    radial-gradient(circle at 72% 24%, rgba(27, 21, 18, 0.34), transparent 28%),
-    radial-gradient(circle at 30% 78%, rgba(255, 255, 255, 0.06), transparent 20%);
+    linear-gradient(135deg, transparent 18%, color-mix(in srgb, var(--shop-ink) 48%, transparent) 18%, transparent 22%, transparent 46%, color-mix(in srgb, var(--shop-ink) 42%, transparent) 46%, transparent 51%),
+    radial-gradient(circle at 72% 24%, color-mix(in srgb, var(--shop-ink) 34%, transparent), transparent 28%),
+    radial-gradient(circle at 30% 78%, color-mix(in srgb, var(--shop-panel) 6%, transparent), transparent 20%);
   pointer-events: none;
 }
 
@@ -759,24 +803,24 @@ button {
 .tile.waste-item .item-orb {
   filter: saturate(0.42) brightness(0.8);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 0 0 1px rgba(35, 29, 25, 0.2);
+    inset 0 1px 0 color-mix(in srgb, var(--shop-panel) 12%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--shop-ink) 20%, transparent);
 }
 
 .tile.waste-item .item-name,
 .tile.waste-item .item-chain,
 .tile.waste-item .item-tier {
-  color: #f0e2cb;
+  color: var(--shop-waste-ink);
 }
 
 .tile.rare-item {
   background:
-    linear-gradient(180deg, rgba(245, 236, 250, 0.96), rgba(227, 214, 238, 0.96));
+    linear-gradient(180deg, var(--shop-rare-bg-a), var(--shop-rare-bg-b));
   animation: rareGlow 2.2s ease-in-out infinite;
 }
 
 .tile.rare-item::before {
-  border-color: rgba(152, 122, 183, 0.22);
+  border-color: color-mix(in srgb, var(--shop-green) 22%, transparent);
 }
 
 .tile.rare-item::after {
@@ -785,33 +829,33 @@ button {
   inset: 7px;
   border-radius: 14px;
   background:
-    linear-gradient(128deg, transparent 0 24%, rgba(255, 255, 255, 0.76) 30%, rgba(242, 231, 250, 0.52) 37%, transparent 45%);
+    linear-gradient(128deg, transparent 0 24%, var(--shop-rare-shine) 30%, color-mix(in srgb, var(--shop-green) 18%, transparent) 37%, transparent 45%);
   pointer-events: none;
 }
 
 .tile.rare-item .item-orb {
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.46),
-    0 0 10px rgba(175, 146, 204, 0.22);
+    inset 0 1px 0 var(--shop-sheen),
+    0 0 10px color-mix(in srgb, var(--shop-green) 22%, transparent);
 }
 
 .tile.rare-item .item-name,
 .tile.rare-item .item-chain {
-  color: #5a466d;
+  color: var(--shop-rare-ink);
 }
 
 .tile.rare-item .item-tier {
-  color: #8766a4;
+  color: color-mix(in srgb, var(--shop-green) 78%, var(--shop-gold));
 }
 
 .tile.legendary-item {
   background:
-    linear-gradient(180deg, rgba(251, 243, 215, 0.97), rgba(238, 220, 162, 0.97));
+    linear-gradient(180deg, var(--shop-legendary-bg-a), var(--shop-legendary-bg-b));
   animation: goldGlow 1.8s ease-in-out infinite;
 }
 
 .tile.legendary-item::before {
-  border-color: rgba(186, 143, 57, 0.26);
+  border-color: color-mix(in srgb, var(--shop-gold) 26%, transparent);
 }
 
 .tile.legendary-item::after {
@@ -820,23 +864,23 @@ button {
   inset: 7px;
   border-radius: 14px;
   background:
-    linear-gradient(128deg, transparent 0 22%, rgba(255, 251, 238, 0.82) 28%, rgba(255, 236, 176, 0.46) 36%, transparent 44%);
+    linear-gradient(128deg, transparent 0 22%, var(--shop-legendary-shine) 28%, color-mix(in srgb, var(--shop-light) 46%, transparent) 36%, transparent 44%);
   pointer-events: none;
 }
 
 .tile.legendary-item .item-orb {
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.52),
-    0 0 12px rgba(217, 182, 91, 0.24);
+    inset 0 1px 0 var(--shop-sheen),
+    0 0 12px color-mix(in srgb, var(--shop-gold) 24%, transparent);
 }
 
 .tile.legendary-item .item-name,
 .tile.legendary-item .item-chain {
-  color: #65471f;
+  color: var(--shop-legendary-ink);
 }
 
 .tile.legendary-item .item-tier {
-  color: #a8721d;
+  color: color-mix(in srgb, var(--shop-gold) 88%, var(--shop-ink));
 }
 
 .item-frame {
@@ -898,8 +942,8 @@ button {
 .codex-image-fallback {
   border-radius: 14px;
   background:
-    radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.3), transparent 36%),
-    linear-gradient(135deg, #cab698, #927d61);
+    radial-gradient(circle at 35% 30%, var(--shop-sheen), transparent 36%),
+    linear-gradient(135deg, var(--shop-card-dark), var(--shop-border));
 }
 
 .item-label {
@@ -913,10 +957,10 @@ button {
 .item-orb {
   width: 38px;
   height: 38px;
-  border: 2px solid rgba(75, 56, 41, 0.28);
+  border: 2px solid color-mix(in srgb, var(--shop-border-dark) 28%, transparent);
   border-radius: 14px;
   background: var(--item-gradient);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  box-shadow: inset 0 1px 0 var(--shop-sheen);
 }
 
 .item-chain {
@@ -1001,16 +1045,16 @@ button {
   width: 58px;
   height: 52px;
   object-fit: contain;
-  filter: drop-shadow(0 5px 0 rgba(12, 7, 4, 0.26)) drop-shadow(0 9px 14px rgba(6, 3, 2, 0.34));
+  filter: drop-shadow(0 5px 0 var(--shop-shadow-mid)) drop-shadow(0 9px 14px var(--shop-shadow-mid));
 }
 
 .trash-bin-copy strong {
   display: block;
   padding: 1px 6px;
-  border: 2px solid rgba(17, 10, 6, 0.28);
+  border: 2px solid color-mix(in srgb, var(--shop-ink) 28%, transparent);
   border-radius: 999px;
-  background: rgba(232, 207, 157, 0.86);
-  color: #3a2414;
+  background: color-mix(in srgb, var(--shop-gold-soft) 36%, var(--shop-paper));
+  color: var(--shop-ink);
   font-size: 9px;
   letter-spacing: 0.04em;
 }
@@ -1025,7 +1069,7 @@ button {
 
 .trash-bin.trash-target {
   transform: translateY(-2px);
-  filter: drop-shadow(0 0 8px rgba(179, 91, 69, 0.3));
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--shop-red) 30%, transparent));
 }
 
 .legend-chip {
@@ -1035,7 +1079,7 @@ button {
   padding: 6px 10px;
   border: 2px solid var(--shop-border-dark);
   border-radius: 999px;
-  background: rgba(232, 207, 157, 0.72);
+  background: color-mix(in srgb, var(--shop-gold-soft) 28%, var(--shop-paper));
   color: var(--shop-ink);
   font-size: 12px;
 }
@@ -1055,7 +1099,7 @@ button {
 }
 
 .dot-tint {
-  background: linear-gradient(135deg, #c7abd8, #d9b06a 48%, #9dcea7);
+  background: linear-gradient(135deg, var(--shop-green), var(--shop-gold-soft) 48%, var(--shop-red));
 }
 
 .sidebar {
@@ -1089,12 +1133,12 @@ button {
 
 .assistant-card {
   padding: 8px;
-  border: 2px solid rgba(19, 11, 7, 0.86);
+  border: 2px solid color-mix(in srgb, var(--shop-ink) 86%, transparent);
   border-radius: 18px;
   background:
-    radial-gradient(circle at 26% 18%, rgba(242, 199, 118, 0.2), transparent 38%),
-    linear-gradient(180deg, #5a351e, #2b190f);
-  box-shadow: inset 0 1px 0 rgba(242, 199, 118, 0.18), 0 7px 0 rgba(12, 7, 4, 0.36);
+    radial-gradient(circle at 26% 18%, color-mix(in srgb, var(--shop-light) 20%, transparent), transparent 38%),
+    linear-gradient(180deg, var(--shop-dark-card), var(--shop-dark-card-2));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--shop-light) 18%, transparent), 0 7px 0 var(--shop-shadow-mid);
 }
 
 .assistant-stage {
@@ -1116,11 +1160,11 @@ button {
   display: grid;
   place-items: center;
   padding: 10px;
-  border: 2px solid rgba(18, 10, 6, 0.86);
+  border: 2px solid color-mix(in srgb, var(--shop-ink) 86%, transparent);
   border-radius: 18px;
   background:
-    radial-gradient(circle at 50% 18%, rgba(242, 199, 118, 0.26), transparent 42%),
-    linear-gradient(180deg, #6b411f, #2b190f);
+    radial-gradient(circle at 50% 18%, color-mix(in srgb, var(--shop-light) 26%, transparent), transparent 42%),
+    linear-gradient(180deg, color-mix(in srgb, var(--shop-dark-card) 78%, var(--shop-gold)), var(--shop-dark-card-2));
   overflow: hidden;
 }
 
@@ -1156,11 +1200,11 @@ button {
   position: relative;
   margin-top: 6px;
   padding: 9px 10px;
-  border: 2px solid rgba(28, 16, 9, 0.36);
+  border: 2px solid color-mix(in srgb, var(--shop-ink) 36%, transparent);
   border-radius: 14px;
   background:
-    linear-gradient(180deg, rgba(255, 240, 198, 0.36), transparent 24%),
-    rgba(232, 207, 157, 0.92);
+    linear-gradient(180deg, color-mix(in srgb, var(--shop-light) 36%, transparent), transparent 24%),
+    var(--shop-bubble);
 }
 
 .assistant-bubble::before {
@@ -1170,9 +1214,9 @@ button {
   left: -8px;
   width: 12px;
   height: 12px;
-  border-left: 2px solid rgba(28, 16, 9, 0.36);
-  border-bottom: 2px solid rgba(28, 16, 9, 0.36);
-  background: rgba(232, 207, 157, 0.92);
+  border-left: 2px solid color-mix(in srgb, var(--shop-ink) 36%, transparent);
+  border-bottom: 2px solid color-mix(in srgb, var(--shop-ink) 36%, transparent);
+  background: var(--shop-bubble);
   transform: rotate(45deg);
 }
 
@@ -1223,7 +1267,7 @@ button {
   background: linear-gradient(180deg, var(--shop-panel-2), var(--shop-panel));
   color: var(--shop-gold-soft);
   font-weight: 800;
-  box-shadow: 0 4px 0 0 rgba(10, 6, 4, 0.65);
+  box-shadow: 0 4px 0 0 var(--shop-shadow-strong);
   font-size: 11px;
   white-space: nowrap;
 }
@@ -1262,9 +1306,9 @@ button {
 .event-card {
   position: relative;
   background:
-    linear-gradient(180deg, rgba(255, 244, 210, 0.5), transparent 22%),
-    #f0d9a6;
-  color: #261408;
+    linear-gradient(180deg, color-mix(in srgb, var(--shop-light) 50%, transparent), transparent 22%),
+    var(--shop-order-bg);
+  color: var(--shop-order-ink);
 }
 
 .order-card::before,
@@ -1277,7 +1321,7 @@ button {
   height: 18px;
   border-radius: 999px;
   background: var(--shop-red);
-  box-shadow: inset 0 2px 0 rgba(255, 213, 180, 0.28), 0 2px 4px rgba(33, 16, 8, 0.32);
+  box-shadow: inset 0 2px 0 color-mix(in srgb, var(--shop-panel) 28%, transparent), 0 2px 4px var(--shop-shadow-mid);
 }
 
 .source-card {
@@ -1288,7 +1332,7 @@ button {
     linear-gradient(180deg, var(--shop-light-soft), transparent 22%),
     var(--shop-panel-2);
   border-style: solid;
-  box-shadow: 0 6px 0 0 rgba(12, 7, 4, 0.72);
+  box-shadow: 0 6px 0 0 var(--shop-shadow-strong);
   padding: 8px 10px 9px;
 }
 
@@ -1309,9 +1353,9 @@ button {
   place-items: center;
   width: 72px;
   height: 72px;
-  border: 2px solid rgba(18, 10, 6, 0.38);
+  border: 2px solid color-mix(in srgb, var(--shop-ink) 38%, transparent);
   border-radius: 16px;
-  background: rgba(232, 207, 157, 0.8);
+  background: color-mix(in srgb, var(--shop-gold-soft) 30%, var(--shop-paper));
 }
 
 .source-preview-button {
@@ -1358,7 +1402,7 @@ button {
 }
 
 .order-card h3 {
-  color: #241207;
+  color: var(--shop-order-ink);
   font-size: 15px;
   font-weight: 900;
   line-height: 1.18;
@@ -1366,14 +1410,14 @@ button {
 
 .order-client {
   margin-top: 4px;
-  color: #4b2b12;
+  color: color-mix(in srgb, var(--shop-order-ink) 78%, var(--shop-gold));
   font-style: italic;
   font-size: 12.5px;
   font-weight: 800;
 }
 
 .order-body {
-  color: #2f190b;
+  color: color-mix(in srgb, var(--shop-order-ink) 88%, var(--shop-gold));
   line-height: 1.42;
   font-size: 13.5px;
   font-weight: 650;
@@ -1389,10 +1433,10 @@ button {
 .source-state {
   flex-shrink: 0;
   padding: 3px 7px;
-  border: 2px solid rgba(15, 8, 5, 0.26);
+  border: 2px solid color-mix(in srgb, var(--shop-ink) 26%, transparent);
   border-radius: 999px;
-  background: rgba(232, 207, 157, 0.72);
-  color: #4a2d15;
+  background: color-mix(in srgb, var(--shop-gold-soft) 28%, var(--shop-paper));
+  color: var(--shop-ink);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -1402,14 +1446,14 @@ button {
 .source-blurb {
   margin: 3px 0 0;
   max-width: 210px;
-  color: #e5c98e;
+  color: var(--shop-gold-soft);
   font-size: 11px;
   line-height: 1.3;
 }
 
 .source-product {
   margin: 5px 0 0;
-  color: #f1dcad;
+  color: color-mix(in srgb, var(--shop-light) 72%, var(--shop-panel));
   font-size: 11px;
   line-height: 1.2;
 }
@@ -1419,14 +1463,14 @@ button {
 .order-reward {
   margin: 8px 0 0;
   padding-left: 18px;
-  color: #38200f;
+  color: var(--shop-order-ink);
   font-size: 12.5px;
   font-weight: 750;
   line-height: 1.42;
 }
 
 .requirement-list strong {
-  color: #1f1007;
+  color: var(--shop-ink);
   font-weight: 950;
 }
 
@@ -1452,8 +1496,8 @@ button {
   border: 2px solid var(--shop-border-dark);
   border-radius: 14px;
   padding: 8px 10px;
-  background: linear-gradient(180deg, #efc05a, #a96622);
-  color: #231207;
+  background: linear-gradient(180deg, var(--shop-button-bg-top), var(--shop-button-bg-bottom));
+  color: var(--shop-button-ink);
   font-weight: 800;
   font-size: 13px;
 }
@@ -1465,7 +1509,7 @@ button {
   border: 2px solid var(--shop-border-dark);
   border-radius: 14px;
   padding: 8px 10px;
-  background: #c9a56a;
+  background: var(--shop-secondary-bg);
   color: var(--shop-ink);
   font-weight: 700;
   font-size: 13px;
@@ -1493,8 +1537,8 @@ button {
 
 .source-card.unlocked {
   background:
-    linear-gradient(180deg, rgba(255, 238, 190, 0.18), transparent 20%),
-    #6a4122;
+    linear-gradient(180deg, color-mix(in srgb, var(--shop-light) 18%, transparent), transparent 20%),
+    var(--shop-source-bg);
 }
 
 .source-meta {
@@ -1511,7 +1555,7 @@ button {
   gap: 4px;
   min-width: 0;
   padding: 4px 7px;
-  border: 2px solid rgba(15, 8, 5, 0.22);
+  border: 2px solid color-mix(in srgb, var(--shop-ink) 22%, transparent);
   border-radius: 999px;
   background: color-mix(in srgb, var(--shop-gold-soft) 30%, var(--shop-paper));
   color: var(--shop-ink);
@@ -1545,7 +1589,7 @@ button {
 .source-switch.active {
   background: linear-gradient(180deg, var(--shop-gold-soft), var(--shop-gold));
   color: var(--shop-ink);
-  box-shadow: 0 4px 0 0 rgba(10, 6, 4, 0.58);
+  box-shadow: 0 4px 0 0 var(--shop-shadow-mid);
 }
 
 .event-lead {
@@ -1586,7 +1630,7 @@ button {
   gap: 8px;
   margin-bottom: 8px;
   padding: 5px 8px;
-  border: 2px solid rgba(28, 16, 9, 0.2);
+  border: 2px solid color-mix(in srgb, var(--shop-ink) 20%, transparent);
   border-radius: 999px;
   background: color-mix(in srgb, var(--shop-gold-soft) 48%, var(--shop-paper));
   color: var(--shop-ink);
@@ -1615,7 +1659,7 @@ button {
 .codex-item-button {
   width: 100%;
   border: 2px solid var(--shop-border-dark);
-  box-shadow: 0 6px 0 0 rgba(12, 7, 4, 0.65);
+  box-shadow: 0 6px 0 0 var(--shop-shadow-strong);
   color: inherit;
   text-align: left;
   cursor: pointer;
@@ -1634,7 +1678,7 @@ button {
   place-items: center;
   width: 44px;
   height: 44px;
-  border: 2px solid rgba(28, 16, 9, 0.18);
+  border: 2px solid color-mix(in srgb, var(--shop-ink) 18%, transparent);
   border-radius: 14px;
   background: color-mix(in srgb, var(--shop-gold-soft) 28%, var(--shop-paper));
 }
@@ -1687,7 +1731,7 @@ button {
     radial-gradient(circle at 18% 12%, var(--shop-light-soft), transparent 34%),
     linear-gradient(180deg, var(--shop-panel-2), var(--shop-panel));
   color: var(--shop-text);
-  box-shadow: 0 8px 0 rgba(10, 6, 4, 0.72), 0 18px 32px rgba(3, 2, 1, 0.42);
+  box-shadow: 0 8px 0 var(--shop-shadow-strong), 0 18px 32px var(--shop-shadow-mid);
 }
 
 .toast strong {
@@ -1717,11 +1761,11 @@ button {
   pointer-events: none;
   opacity: 1;
   transform: translate(-50%, -50%) rotate(-3deg) scale(1.02);
-  box-shadow: 0 14px 26px rgba(75, 56, 41, 0.28);
+  box-shadow: 0 14px 26px var(--shop-shadow-mid);
 }
 
 .drag-ghost.occupied:not(.waste-item):not(.rare-item):not(.legendary-item) {
-  background: var(--tile-solid-tint, #f7ead3);
+  background: var(--tile-solid-tint, var(--shop-tile-default));
 }
 
 .intro-overlay {
@@ -1753,7 +1797,7 @@ button {
 .library-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(9, 5, 3, 0.72);
+  background: var(--shop-overlay);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
 }
@@ -1772,7 +1816,7 @@ button {
   background:
     radial-gradient(circle at 20% 10%, var(--shop-light-soft), transparent 30%),
     linear-gradient(180deg, var(--shop-panel-2), var(--shop-panel));
-  box-shadow: 0 12px 0 0 rgba(10, 6, 4, 0.82), 0 28px 60px rgba(3, 2, 1, 0.56);
+  box-shadow: 0 12px 0 0 var(--shop-shadow-strong), 0 28px 60px var(--shop-shadow-deep);
   min-height: 0;
 }
 
@@ -1804,7 +1848,7 @@ button {
   background: linear-gradient(180deg, var(--shop-panel-2), var(--shop-panel));
   color: var(--shop-gold-soft);
   font-weight: 800;
-  box-shadow: 0 4px 0 0 rgba(10, 6, 4, 0.65);
+  box-shadow: 0 4px 0 0 var(--shop-shadow-strong);
   cursor: pointer;
 }
 
@@ -1857,7 +1901,7 @@ button {
 .report-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(54, 36, 18, 0.44);
+  background: var(--shop-overlay-soft);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
 }
@@ -1948,7 +1992,7 @@ button {
 .item-detail-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(9, 5, 3, 0.72);
+  background: var(--shop-overlay);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
 }
@@ -1963,7 +2007,7 @@ button {
   background:
     radial-gradient(circle at 22% 12%, var(--shop-light-soft), transparent 34%),
     linear-gradient(180deg, var(--shop-panel-2), var(--shop-panel));
-  box-shadow: 0 12px 0 0 rgba(10, 6, 4, 0.82), 0 28px 60px rgba(3, 2, 1, 0.56);
+  box-shadow: 0 12px 0 0 var(--shop-shadow-strong), 0 28px 60px var(--shop-shadow-deep);
 }
 
 .item-detail-close {
@@ -2018,7 +2062,7 @@ button {
 
 .item-detail-tag {
   padding: 6px 10px;
-  border: 2px solid rgba(17, 10, 6, 0.28);
+  border: 2px solid color-mix(in srgb, var(--shop-ink) 28%, transparent);
   border-radius: 999px;
   background: color-mix(in srgb, var(--shop-gold-soft) 55%, var(--shop-paper));
   color: var(--shop-ink);
@@ -2036,7 +2080,7 @@ button {
 .item-detail-block {
   min-height: 132px;
   padding: 12px;
-  border: 2px solid rgba(17, 10, 6, 0.22);
+  border: 2px solid color-mix(in srgb, var(--shop-ink) 22%, transparent);
   border-radius: 18px;
   background:
     linear-gradient(180deg, var(--shop-light-soft), transparent 24%),
@@ -2054,7 +2098,7 @@ button {
 .intro-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(54, 36, 18, 0.52);
+  background: var(--shop-overlay-soft);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
 }
@@ -2138,10 +2182,10 @@ body.creator-page-active {
 }
 
 .creator-page-shell {
-  width: min(100%, 1100px);
-  min-height: calc(100vh - 36px);
+  width: min(100%, 1180px);
+  min-height: calc(100vh - 24px);
   margin: 0 auto;
-  padding: 12px 18px;
+  padding: 8px 14px;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -2163,7 +2207,18 @@ body.creator-page-active {
 }
 
 .creator-page[data-step="idea"] .creator-center-wrap {
-  min-height: calc(100vh - 36px);
+  min-height: calc(100vh - 24px);
+}
+
+.creator-page[data-step="building"] .creator-page-shell {
+  width: 100%;
+  min-height: calc(100vh - 24px);
+  padding: 0 14px;
+  justify-content: stretch;
+}
+
+.creator-page[data-step="building"] .creator-step {
+  align-items: stretch;
 }
 
 .creator-phase-chip,
@@ -2171,9 +2226,9 @@ body.creator-page-active {
   display: inline-flex;
   align-items: center;
   padding: 7px 10px;
-  border: 2px solid rgba(75, 56, 41, 0.14);
+  border: 2px solid color-mix(in srgb, var(--shop-border-dark) 14%, transparent);
   border-radius: 999px;
-  background: rgba(255, 248, 231, 0.72);
+  background: color-mix(in srgb, var(--shop-paper) 72%, transparent);
   color: var(--wood-soft);
   font-size: 11px;
   font-weight: 700;
@@ -2218,7 +2273,7 @@ body.creator-page-active {
   gap: 12px;
   padding: 8px 10px 8px 14px;
   border: 2px solid color-mix(in srgb, var(--wood) 42%, transparent);
-  border-radius: 999px;
+  border-radius: 18px;
   background: color-mix(in srgb, var(--shop-paper) 72%, transparent);
   box-shadow: 0 6px 0 color-mix(in srgb, var(--shop-border-dark) 12%, transparent);
 }
@@ -2274,8 +2329,8 @@ body.creator-page-active {
 .creator-probe-result {
   width: min(100%, 640px);
   padding: 12px 14px;
-  border: 3px solid rgba(75, 56, 41, 0.2);
-  border-radius: 20px;
+  border: 3px solid color-mix(in srgb, var(--shop-border-dark) 20%, transparent);
+  border-radius: 16px;
   background: color-mix(in srgb, var(--shop-paper) 76%, transparent);
   color: var(--shop-text);
   font-size: 12px;
@@ -2285,7 +2340,7 @@ body.creator-page-active {
 
 .creator-llm-status,
 .creator-probe-result[data-state="running"] {
-  border-color: rgba(75, 56, 41, 0.2);
+  border-color: color-mix(in srgb, var(--shop-border-dark) 20%, transparent);
   background: color-mix(in srgb, var(--shop-paper) 78%, transparent);
   color: var(--shop-muted);
 }
@@ -2297,8 +2352,8 @@ body.creator-page-active {
   align-items: center;
   justify-content: center;
   padding: 10px 14px;
-  border: 3px solid rgba(75, 56, 41, 0.2);
-  border-radius: 18px;
+  border: 3px solid color-mix(in srgb, var(--shop-border-dark) 20%, transparent);
+  border-radius: 14px;
   background: color-mix(in srgb, var(--shop-paper) 78%, transparent);
   color: var(--shop-muted);
   font-size: 12px;
@@ -2308,13 +2363,13 @@ body.creator-page-active {
 }
 
 .creator-probe-result[data-state="success"] {
-  border-color: rgba(108, 143, 77, 0.34);
-  background: rgba(234, 244, 223, 0.84);
+  border-color: color-mix(in srgb, var(--shop-green) 34%, transparent);
+  background: var(--shop-success-bg);
 }
 
 .creator-probe-result[data-state="error"] {
-  border-color: rgba(179, 91, 69, 0.3);
-  background: rgba(248, 231, 221, 0.86);
+  border-color: color-mix(in srgb, var(--shop-red) 30%, transparent);
+  background: var(--shop-error-bg);
 }
 
 .creator-input-stack {
@@ -2330,7 +2385,7 @@ body.creator-page-active {
   line-height: 1.46;
   text-align: center;
   white-space: pre-line;
-  text-shadow: 0 2px 0 rgba(255, 248, 231, 0.36);
+  text-shadow: 0 2px 0 color-mix(in srgb, var(--shop-paper) 36%, transparent);
 }
 
 .creator-lead {
@@ -2355,7 +2410,7 @@ body.creator-page-active {
 .creator-chat-input {
   width: 100%;
   border: 2px solid var(--wood);
-  border-radius: 18px;
+  border-radius: 14px;
   padding: 12px 14px;
   background: color-mix(in srgb, var(--shop-paper) 92%, transparent);
   color: var(--text);
@@ -2372,13 +2427,13 @@ body.creator-page-active {
   min-height: 104px;
   padding: 18px 144px 18px 20px;
   border: 3px solid var(--wood);
-  border-radius: 26px;
+  border-radius: 18px;
   background: color-mix(in srgb, var(--shop-paper) 96%, white 4%);
   text-align: left;
   box-shadow:
-    inset 0 2px 0 rgba(255, 255, 255, 0.46),
-    0 10px 0 rgba(75, 56, 41, 0.18),
-    0 18px 30px rgba(75, 56, 41, 0.1);
+    inset 0 2px 0 var(--shop-sheen),
+    0 10px 0 var(--shop-shadow-soft),
+    0 18px 30px color-mix(in srgb, var(--shop-border-dark) 10%, transparent);
 }
 
 .creator-input-submit {
@@ -2395,7 +2450,7 @@ body.creator-page-active {
 .creator-input-submit .primary-button {
   width: 118px;
   min-height: 100%;
-  border-radius: 24px;
+  border-radius: 14px;
   padding: 18px 18px;
   white-space: nowrap;
 }
@@ -2471,7 +2526,7 @@ body.creator-page-active {
 .creator-dialogue-card {
   position: relative;
   border: 3px solid var(--wood);
-  border-radius: 26px;
+  border-radius: 16px;
   background:
     linear-gradient(180deg, var(--shop-light-soft), transparent 26%),
     var(--shop-panel);
@@ -2480,8 +2535,8 @@ body.creator-page-active {
 .creator-summary-card {
   padding: 20px 20px 18px;
   box-shadow:
-    0 10px 0 0 rgba(75, 56, 41, 0.24),
-    0 18px 36px rgba(75, 56, 41, 0.1);
+    0 10px 0 0 color-mix(in srgb, var(--shop-border-dark) 24%, transparent),
+    0 18px 36px color-mix(in srgb, var(--shop-border-dark) 10%, transparent);
 }
 
 .creator-summary-card h3 {
@@ -2502,8 +2557,8 @@ body.creator-page-active {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0;
   margin-top: 16px;
-  border-top: 2px dashed rgba(75, 56, 41, 0.18);
-  border-bottom: 2px dashed rgba(75, 56, 41, 0.18);
+  border-top: 2px dashed color-mix(in srgb, var(--shop-border-dark) 18%, transparent);
+  border-bottom: 2px dashed color-mix(in srgb, var(--shop-border-dark) 18%, transparent);
 }
 
 .creator-summary-block {
@@ -2515,7 +2570,7 @@ body.creator-page-active {
 }
 
 .creator-summary-block + .creator-summary-block {
-  border-left: 2px dashed rgba(75, 56, 41, 0.18);
+  border-left: 2px dashed color-mix(in srgb, var(--shop-border-dark) 18%, transparent);
 }
 
 .creator-summary-block strong {
@@ -2533,12 +2588,12 @@ body.creator-page-active {
 
 .creator-visual-novel {
   display: grid;
-  width: min(100%, 880px);
+  width: min(100%, 1180px);
   margin: 0 auto;
-  grid-template-rows: 288px auto auto 34px;
-  gap: 12px;
+  grid-template-rows: minmax(0, 1fr) auto auto auto 42px;
+  gap: 10px;
   min-height: 0;
-  height: auto;
+  height: calc(100vh - 24px);
 }
 
 .creator-visual-novel[data-mode="portrait-loading"] {
@@ -2579,22 +2634,22 @@ body.creator-page-active {
 .creator-stage-scene {
   position: relative;
   width: 100%;
-  height: 288px;
-  min-height: 288px;
+  height: 100%;
+  min-height: 0;
   display: grid;
   place-items: center;
   padding: 18px 22px 18px;
   box-sizing: border-box;
   overflow: hidden;
   border: 3px solid var(--wood);
-  border-radius: 34px;
+  border-radius: 20px;
   background:
     radial-gradient(circle at 50% 18%, var(--shop-light-soft), transparent 28%),
     linear-gradient(180deg, color-mix(in srgb, var(--shop-panel-2) 82%, transparent), color-mix(in srgb, var(--shop-panel) 84%, transparent) 46%, color-mix(in srgb, var(--shop-bg-bottom) 70%, transparent) 100%);
   box-shadow:
-    inset 0 0 0 1px rgba(255, 250, 235, 0.42),
-    0 12px 0 rgba(75, 56, 41, 0.22),
-    0 24px 44px rgba(75, 56, 41, 0.12);
+    inset 0 0 0 1px color-mix(in srgb, var(--shop-paper) 42%, transparent),
+    0 12px 0 color-mix(in srgb, var(--shop-border-dark) 22%, transparent),
+    0 24px 44px color-mix(in srgb, var(--shop-border-dark) 12%, transparent);
 }
 
 .creator-stage-aura {
@@ -2602,7 +2657,7 @@ body.creator-page-active {
   inset: 12% 20% auto;
   height: 220px;
   border-radius: 999px;
-  background: radial-gradient(circle, rgba(255, 250, 235, 0.82), rgba(232, 202, 142, 0.2) 56%, transparent 72%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--shop-paper) 82%, transparent), color-mix(in srgb, var(--shop-gold-soft) 20%, transparent) 56%, transparent 72%);
   filter: blur(10px);
 }
 
@@ -2628,9 +2683,9 @@ body.creator-page-active {
   height: 100%;
   padding: 22px 24px;
   border: 3px solid var(--wood);
-  border-radius: 28px;
+  border-radius: 16px;
   background: color-mix(in srgb, var(--shop-paper) 94%, transparent);
-  box-shadow: 0 12px 0 rgba(75, 56, 41, 0.18);
+  box-shadow: 0 12px 0 var(--shop-shadow-soft);
   text-align: center;
 }
 
@@ -2655,7 +2710,7 @@ body.creator-page-active {
   max-height: 100%;
   object-fit: contain;
   object-position: center bottom;
-  filter: drop-shadow(0 18px 24px rgba(75, 56, 41, 0.18));
+  filter: drop-shadow(0 18px 24px var(--shop-shadow-soft));
 }
 
 .creator-stage-nameplate {
@@ -2668,9 +2723,9 @@ body.creator-page-active {
   gap: 4px;
   padding: 10px 14px 11px;
   border: 3px solid var(--wood);
-  border-radius: 20px;
+  border-radius: 14px;
   background: color-mix(in srgb, var(--shop-paper) 92%, transparent);
-  box-shadow: 0 8px 0 rgba(75, 56, 41, 0.2);
+  box-shadow: 0 8px 0 color-mix(in srgb, var(--shop-border-dark) 20%, transparent);
 }
 
 .creator-stage-nameplate strong {
@@ -2688,10 +2743,10 @@ body.creator-page-active {
   position: relative;
   width: 100%;
   margin: 0 auto;
-  padding: 14px 16px 16px;
+  padding: 12px 14px 14px;
   box-shadow:
-    0 10px 0 0 rgba(75, 56, 41, 0.34),
-    0 16px 34px rgba(75, 56, 41, 0.12);
+    0 10px 0 0 var(--shop-shadow-mid),
+    0 16px 34px color-mix(in srgb, var(--shop-border-dark) 12%, transparent);
 }
 
 .creator-dialogue-head {
@@ -2714,8 +2769,8 @@ body.creator-page-active {
 }
 
 .creator-history-toggle {
-  border: 2px solid rgba(75, 56, 41, 0.18);
-  border-radius: 999px;
+  border: 2px solid color-mix(in srgb, var(--shop-border-dark) 18%, transparent);
+  border-radius: 12px;
   background: color-mix(in srgb, var(--shop-paper) 78%, transparent);
   color: var(--wood);
   font-size: 12px;
@@ -2735,7 +2790,7 @@ body.creator-page-active {
   position: relative;
   width: 100%;
   margin: 0 auto;
-  padding: 0 2px;
+  padding: 0 2px 2px;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -2747,7 +2802,7 @@ body.creator-page-active {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
   color: color-mix(in srgb, var(--wood) 82%, transparent);
   font-size: 11px;
   font-weight: 900;
@@ -2762,17 +2817,17 @@ body.creator-page-active {
 
 .creator-build-progress-bar {
   position: relative;
-  height: 18px;
+  height: 16px;
   border: 3px solid color-mix(in srgb, var(--wood) 64%, transparent);
   border-radius: 999px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.52), transparent 42%),
+    linear-gradient(180deg, var(--shop-sheen), transparent 42%),
     color-mix(in srgb, var(--shop-paper-soft) 78%, transparent);
   overflow: hidden;
   box-shadow:
-    inset 0 2px 0 rgba(255, 255, 255, 0.48),
-    inset 0 -3px 0 rgba(75, 56, 41, 0.12),
-    0 5px 0 rgba(75, 56, 41, 0.18);
+    inset 0 2px 0 var(--shop-sheen),
+    inset 0 -3px 0 color-mix(in srgb, var(--shop-border-dark) 12%, transparent),
+    0 5px 0 var(--shop-shadow-soft);
 }
 
 .creator-build-progress-fill {
@@ -2781,83 +2836,50 @@ body.creator-page-active {
   width: 0;
   border-radius: inherit;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.54), transparent 42%),
+    linear-gradient(180deg, var(--shop-sheen), transparent 42%),
     linear-gradient(90deg, var(--shop-gold-soft), var(--shop-gold));
-  box-shadow: inset 0 -3px 0 rgba(75, 56, 41, 0.18);
+  box-shadow: inset 0 -3px 0 var(--shop-shadow-soft);
   transition: width 220ms ease;
 }
 
 .creator-build-progress-steps {
-  position: absolute;
-  inset: auto 0 -2px;
+  position: static;
   display: flex;
-  justify-content: space-between;
-  padding: 0 10px;
+  justify-content: center;
+  padding: 4px 0 0;
   margin-top: 0;
   pointer-events: none;
 }
 
 .creator-build-progress-step {
-  display: flex;
+  display: none;
   justify-content: center;
   min-width: 0;
   text-align: center;
 }
 
 .creator-build-progress-dot {
-  width: 8px;
-  height: 8px;
-  border: 2px solid color-mix(in srgb, var(--wood) 46%, transparent);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--shop-paper) 90%, transparent);
-  box-shadow: 0 1px 0 rgba(75, 56, 41, 0.1);
-  transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease;
+  display: none;
 }
 
 .creator-build-progress-label {
-  display: none;
+  display: inline-flex;
   line-height: 1;
-}
-
-.creator-build-progress-step.is-completed .creator-build-progress-dot {
-  border-color: color-mix(in srgb, var(--shop-gold) 36%, var(--wood));
-  background: var(--shop-gold-soft);
-}
-
-.creator-build-progress-step.is-completed .creator-build-progress-label {
   color: var(--wood);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
 }
 
-.creator-build-progress-step.is-current .creator-build-progress-dot {
-  border-color: color-mix(in srgb, var(--shop-gold) 62%, var(--wood));
-  background: var(--shop-card);
-  transform: scale(1.28);
-  box-shadow:
-    0 0 0 4px color-mix(in srgb, var(--shop-gold) 18%, transparent),
-    0 1px 0 rgba(75, 56, 41, 0.1);
-}
-
-.creator-build-progress-step.is-current .creator-build-progress-label {
-  color: var(--wood);
-  font-weight: 800;
-}
-
-.creator-build-progress-step.is-blocked .creator-build-progress-dot,
-.creator-build-progress-step.is-failed .creator-build-progress-dot {
-  border-color: rgba(179, 91, 69, 0.55);
-  background: rgba(240, 203, 194, 0.95);
-}
-
-.creator-build-progress-step.is-blocked .creator-build-progress-label,
-.creator-build-progress-step.is-failed .creator-build-progress-label {
+.creator-build-progress-label.is-blocked,
+.creator-build-progress-label.is-failed {
   color: var(--danger);
-  font-weight: 800;
 }
 
 .creator-dialogue-text {
-  margin: 14px 0 0;
-  min-height: 72px;
-  max-height: 168px;
+  margin: 10px 0 0;
+  min-height: 64px;
+  max-height: 132px;
   overflow: auto;
   color: var(--text);
   font-size: 19px;
@@ -2881,16 +2903,38 @@ body.creator-page-active {
   min-width: 0;
   min-height: 52px;
   border-width: 3px;
-  border-radius: 18px;
+  border-radius: 14px;
   padding-inline: 14px;
   background: color-mix(in srgb, var(--shop-paper) 96%, white 4%);
-  box-shadow: 0 8px 0 rgba(75, 56, 41, 0.18);
+  box-shadow: 0 8px 0 var(--shop-shadow-soft);
 }
 
 .creator-send-button {
   width: 100%;
   min-height: 52px;
   padding-inline: 0;
+  white-space: nowrap;
+}
+
+.creator-recovery-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.creator-recovery-row[hidden] {
+  display: none;
+}
+
+.creator-recovery-row .primary-button,
+.creator-recovery-row .secondary-button {
+  width: auto;
+  min-width: 146px;
+  min-height: 44px;
+  border-radius: 14px;
+  padding: 8px 14px;
   white-space: nowrap;
 }
 
@@ -2901,11 +2945,11 @@ body.creator-page-active {
   bottom: calc(100% + 12px);
   padding: 12px;
   border: 3px solid var(--wood);
-  border-radius: 18px;
+  border-radius: 14px;
   background:
     linear-gradient(180deg, var(--shop-light-soft), transparent 24%),
     color-mix(in srgb, var(--shop-paper) 96%, transparent);
-  box-shadow: 0 10px 0 rgba(75, 56, 41, 0.18), 0 18px 30px rgba(75, 56, 41, 0.12);
+  box-shadow: 0 10px 0 var(--shop-shadow-soft), 0 18px 30px color-mix(in srgb, var(--shop-border-dark) 12%, transparent);
   z-index: 3;
 }
 
@@ -2919,7 +2963,7 @@ body.creator-page-active {
 
 .creator-history-item {
   padding: 8px 10px;
-  border: 1px solid rgba(75, 56, 41, 0.08);
+  border: 1px solid color-mix(in srgb, var(--shop-border-dark) 8%, transparent);
   border-radius: 14px;
   background: color-mix(in srgb, var(--shop-paper) 66%, transparent);
 }
@@ -2946,7 +2990,7 @@ body.creator-page-active {
     box-shadow: var(--shadow);
   }
   50% {
-    box-shadow: 0 0 0 4px rgba(108, 143, 77, 0.18), var(--shadow);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--shop-green) 18%, transparent), var(--shadow);
   }
 }
 
@@ -2962,20 +3006,20 @@ body.creator-page-active {
 @keyframes rareGlow {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(161, 132, 187, 0.08), var(--shadow);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--shop-green) 8%, transparent), var(--shadow);
   }
   50% {
-    box-shadow: 0 0 0 2px rgba(161, 132, 187, 0.12), 0 0 10px rgba(161, 132, 187, 0.08), var(--shadow);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--shop-green) 12%, transparent), 0 0 10px color-mix(in srgb, var(--shop-green) 8%, transparent), var(--shadow);
   }
 }
 
 @keyframes goldGlow {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(212, 173, 90, 0.08), var(--shadow);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--shop-gold) 8%, transparent), var(--shadow);
   }
   50% {
-    box-shadow: 0 0 0 2px rgba(212, 173, 90, 0.14), 0 0 12px rgba(212, 173, 90, 0.08), var(--shadow);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--shop-gold) 14%, transparent), 0 0 12px color-mix(in srgb, var(--shop-gold) 8%, transparent), var(--shadow);
   }
 }
 
@@ -3090,7 +3134,8 @@ body.creator-page-active {
   }
 
   .creator-visual-novel {
-    grid-template-rows: 276px auto auto 34px;
+    height: calc(100vh - 28px);
+    grid-template-rows: minmax(0, 1fr) auto auto auto 42px;
   }
 
   .creator-visual-novel[data-mode="portrait-loading"] {
@@ -3099,17 +3144,13 @@ body.creator-page-active {
   }
 
   .creator-stage-scene {
-    height: 276px;
-    min-height: 276px;
+    height: 100%;
+    min-height: 0;
   }
 
   .creator-stage-frame {
     width: min(100%, 384px);
     height: 100%;
-  }
-
-  .creator-build-progress-steps {
-    gap: 6px;
   }
 
   .creator-build-progress-label {
@@ -3151,6 +3192,10 @@ body.creator-page-active {
 
   .creator-page-shell {
     padding: 14px;
+  }
+
+  .creator-page[data-step="building"] .creator-page-shell {
+    padding: 0 10px;
   }
 
   .creator-summary-card-centered {
@@ -3226,8 +3271,8 @@ body.creator-page-active {
   }
 
   .creator-stage-scene {
-    height: 228px;
-    min-height: 228px;
+    height: 100%;
+    min-height: 0;
     padding: 14px 16px;
   }
 
@@ -3235,10 +3280,6 @@ body.creator-page-active {
     width: min(100%, 300px);
     height: 100%;
     padding-bottom: 8px;
-  }
-
-  .creator-build-progress-steps {
-    padding-inline: 8px;
   }
 
   .creator-stage-nameplate {
@@ -3262,7 +3303,17 @@ body.creator-page-active {
   }
 
   .creator-chat-dock {
-    padding: 10px;
+    padding: 0;
+  }
+
+  .creator-recovery-row {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .creator-recovery-row .primary-button,
+  .creator-recovery-row .secondary-button {
+    width: 100%;
   }
 
   .play-footer {

@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "generatedAt": "2026-04-28T00:00:00.000Z",
+  "baseUrl": "/generated/shop-stickers/hp-wood",
+  "stickers": [
+    {
+      "id": "hall",
+      "role": "hall",
+      "label": "大厅",
+      "url": "/generated/shop-stickers/hp-wood/sticker_15_platform-nine.png"
+    },
+    {
+      "id": "codex",
+      "role": "codex",
+      "label": "图鉴",
+      "url": "/generated/shop-stickers/hp-wood/sticker_08_spell-book.png"
+    },
+    {
+      "id": "shelf",
+      "role": "shelf",
+      "label": "收藏",
+      "url": "/generated/shop-stickers/hp-wood/sticker_10_hogwarts-crest.png"
+    },
+    {
+      "id": "reset",
+      "role": "reset",
+      "label": "重开",
+      "url": "/generated/shop-stickers/hp-wood/sticker_13_time-turner.png"
+    },
+    {
+      "id": "trash",
+      "role": "trash",
+      "label": "垃圾桶",
+      "url": "/generated/shop-stickers/hp-wood/sticker_06_cauldron.png"
+    }
+  ],
+  "bindings": {
+    "hall": {
+      "id": "hall",
+      "role": "hall",
+      "label": "大厅",
+      "url": "/generated/shop-stickers/hp-wood/sticker_15_platform-nine.png"
+    },
+    "codex": {
+      "id": "codex",
+      "role": "codex",
+      "label": "图鉴",
+      "url": "/generated/shop-stickers/hp-wood/sticker_08_spell-book.png"
+    },
+    "shelf": {
+      "id": "shelf",
+      "role": "shelf",
+      "label": "收藏",
+      "url": "/generated/shop-stickers/hp-wood/sticker_10_hogwarts-crest.png"
+    },
+    "reset": {
+      "id": "reset",
+      "role": "reset",
+      "label": "重开",
+      "url": "/generated/shop-stickers/hp-wood/sticker_13_time-turner.png"
+    },
+    "trash": {
+      "id": "trash",
+      "role": "trash",
+      "label": "垃圾桶",
+      "url": "/generated/shop-stickers/hp-wood/sticker_06_cauldron.png"
+    }
+  }
+}
