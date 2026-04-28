@@ -1646,11 +1646,14 @@ button {
   color: var(--shop-on-source);
 }
 
-.source-card.unlocked h3,
+.source-card.unlocked h3 {
+  color: var(--shop-on-source);
+}
+
 .source-card.unlocked .source-state,
 .source-card.unlocked .source-meta-pill,
 .source-card.unlocked .source-meta-pill strong {
-  color: var(--shop-on-source);
+  color: var(--shop-on-chip);
 }
 
 .source-card.unlocked .source-blurb,
