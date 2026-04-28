@@ -1229,7 +1229,16 @@ function renderIntro() {
   elements.introOverlay.hidden = !shouldShow;
   if (!shouldShow) return;
 
-  const step = introSequence[introStepIndex];
+  const step = introSequence[introStepIndex] || introSequence[0] || {
+    speaker: runtimeConfig.assistantName || "店员",
+    text: "店已经开门了。先看第一张委托，再从补给里拿材料开始合成。",
+  };
+  const scene = document.getElementById("introScene");
+  if (scene) {
+    scene.textContent = runtimeConfig.shopName
+      ? `${runtimeConfig.shopName} · 开张引导`
+      : "世界商店 · 开张引导";
+  }
   elements.introSpeaker.textContent = step.speaker;
   elements.introText.textContent = step.text;
   elements.introStep.textContent = `${introStepIndex + 1} / ${introSequence.length}`;

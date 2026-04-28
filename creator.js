@@ -1559,7 +1559,7 @@
         if (existingLocalSave) {
           applyRuntimeConfig(runtimeConfig);
         } else {
-          resetShopRuntime(runtimeConfig, { introSeen: true });
+          resetShopRuntime(runtimeConfig, { introSeen: false });
         }
 
         showShopPage();
@@ -1780,7 +1780,7 @@
         console.error("Failed to mark session as entered", error);
       }
     }
-    resetShopRuntime(state.concept?.runtimeConfig || {}, { introSeen: true });
+    resetShopRuntime(state.concept?.runtimeConfig || {}, { introSeen: false });
     showShopPage();
   }
 

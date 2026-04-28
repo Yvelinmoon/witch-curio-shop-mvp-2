@@ -143,7 +143,7 @@
         <div class="intro-backdrop"></div>
         <div class="intro-card" role="dialog" aria-modal="true" aria-labelledby="introSpeaker">
           <p class="section-kicker">入场序章</p>
-          <div class="intro-scene">有求必应屋 · 课后委托局</div>
+          <div id="introScene" class="intro-scene">世界商店 · 开张引导</div>
           <h2 id="introSpeaker">麦格教授</h2>
           <p id="introText" class="intro-text">
             霍格沃茨里总有一些上不了正式课程流程、却又不能放着不管的小需求。坏掉的练习物件、临时缺的草药材料、社团急用的小道具，最后都会被送到这里。
@@ -398,30 +398,30 @@
         const step = document.getElementById("introStep");
         const next = document.getElementById("introNext");
         const skip = document.getElementById("introSkip");
-        const storageKey = "witch-curio_shop_mvp_v4_hp";
+        const storageKey = window.__SHOP_SAVE_KEY__ || "witch-curio_shop_mvp_v5_builder";
 
         if (!overlay || !speaker || !text || !step || !next || !skip) return;
 
         const sequence = [
           {
-            speaker: "麦格教授",
+            speaker: "旁白",
             text:
-              "霍格沃茨里总有一些上不了正式课程流程、却又不能放着不管的小需求。坏掉的练习物件、临时缺的草药材料、社团急用的小道具，最后都会被送到这里。",
+              "这间店刚刚开门，第一批货还在柜台旁等着整理。先看清委托，再决定从哪里进货。",
           },
           {
             speaker: "旁白",
             text:
-              "久而久之，有求必应屋里形成了一处半公开的课后委托局。它不是商店，更像学校内部一处专门整理、拼配与修复魔法物件的后勤角落。",
+              "你的目标很简单：把材料合成更高阶的货，交付客人的订单，赚到金币，让这家店慢慢长成这个世界的一部分。",
           },
           {
-            speaker: "赫敏",
+            speaker: "店员",
             text:
-              "原本负责这里的人这周不在，可今晚又有学院展示和几封猫头鹰加急委托。教授们没空细管，所以你得先顶上，把这里重新运转起来。",
+              "我会帮你盯着委托和补给。你先从最基础的货开始，两个相同材料可以合成一个更好的成品。",
           },
           {
-            speaker: "麦格教授",
+            speaker: "旁白",
             text:
-              "先别想着做多复杂的东西。去补一点草药材料，把两个相同物件合成出第一份泡泡豆荚，再完成第一张委托。只要柜台动起来，后面的事就好办了。",
+              "先完成第一张委托。只要柜台开始运转，后面的货源、配方、收藏和升级都会逐步展开。",
           },
         ];
 
