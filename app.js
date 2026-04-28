@@ -542,9 +542,14 @@ function applyThemeTokens() {
     shopInk: "--shop-ink",
     shopMuted: "--shop-muted",
     shopOnPanel: "--shop-on-panel",
+    shopOnPanel2: "--shop-on-panel-2",
     shopOnPaper: "--shop-on-paper",
     shopOnCard: "--shop-on-card",
     shopOnDark: "--shop-on-dark",
+    shopOnAccent: "--shop-on-accent",
+    shopOnChip: "--shop-on-chip",
+    shopOnGreenChip: "--shop-on-green-chip",
+    shopOnRed: "--shop-on-red",
     shopOnOrder: "--shop-on-order",
     shopOnSource: "--shop-on-source",
     shopOnButton: "--shop-on-button",
@@ -556,9 +561,11 @@ function applyThemeTokens() {
     shopOnError: "--shop-on-error",
     shopOnSuccess: "--shop-on-success",
     shopMutedOnPanel: "--shop-muted-on-panel",
+    shopMutedOnPanel2: "--shop-muted-on-panel-2",
     shopMutedOnPaper: "--shop-muted-on-paper",
     shopMutedOnCard: "--shop-muted-on-card",
     shopMutedOnDark: "--shop-muted-on-dark",
+    shopMutedOnChip: "--shop-muted-on-chip",
     shopMutedOnOrder: "--shop-muted-on-order",
     shopMutedOnSource: "--shop-muted-on-source",
     shopMutedOnBubble: "--shop-muted-on-bubble",
@@ -638,6 +645,7 @@ function mixThemeColor(colorA, colorB, percentA = 50) {
 function normalizeThemeContrast(theme) {
   const next = { ...theme };
   const panelBg = next.shopPanel || next.paper || "#fff7e7";
+  const panel2Bg = next.shopPanel2 || panelBg;
   const paperBg = next.shopPaper || next.paper || "#fff7e7";
   const cardBg = next.shopCard || next.shopPaper || "#fffaf0";
   const darkCardBg = next.shopCardDark || next.shopPanel2 || "#ead2a8";
@@ -656,15 +664,23 @@ function normalizeThemeContrast(theme) {
   const buttonBg = mixThemeColor(gold, borderDark, 76);
   const secondaryBg = mixThemeColor(goldSoft, next.shopPanel2 || panelBg, 48);
   const bubbleBg = mixThemeColor(cardBg, goldSoft, 88);
+  const accentBg = mixThemeColor(goldSoft, gold, 52);
+  const chipBg = mixThemeColor(goldSoft, paperBg, 30);
+  const greenChipBg = mixThemeColor(green, paperBg, 20);
   const wasteBg = mixThemeColor(borderDark, "#000000", 86);
   const rareBg = mixThemeColor(next.shopPaperSoft || paperBg, green, 78);
   const legendaryBg = mixThemeColor(next.shopPaperSoft || paperBg, gold, 72);
   const errorBg = mixThemeColor(red, paperBg, 18);
   const successBg = mixThemeColor(green, paperBg, 20);
   next.shopOnPanel = pickReadableColor(panelBg);
+  next.shopOnPanel2 = pickReadableColor(panel2Bg);
   next.shopOnPaper = pickReadableColor(paperBg);
   next.shopOnCard = pickReadableColor(cardBg);
   next.shopOnDark = pickReadableColor(darkCardBg);
+  next.shopOnAccent = pickReadableColor(accentBg);
+  next.shopOnChip = pickReadableColor(chipBg);
+  next.shopOnGreenChip = pickReadableColor(greenChipBg);
+  next.shopOnRed = pickReadableColor(red, "#050505", "#fff7e8");
   next.shopOnOrder = pickReadableColor(orderBg);
   next.shopOnSource = pickReadableColor(sourceBg);
   next.shopPlayPanelBase = playPanelBase;
@@ -681,9 +697,11 @@ function normalizeThemeContrast(theme) {
   next.shopOnError = pickReadableColor(errorBg);
   next.shopOnSuccess = pickReadableColor(successBg);
   next.shopMutedOnPanel = pickReadableColor(panelBg, "#6f5940", "#f4dfbf");
+  next.shopMutedOnPanel2 = pickReadableColor(panel2Bg, "#6f5940", "#f4dfbf");
   next.shopMutedOnPaper = pickReadableColor(paperBg, "#6f5940", "#f4dfbf");
   next.shopMutedOnCard = pickReadableColor(cardBg, "#6f5940", "#f4dfbf");
   next.shopMutedOnDark = pickReadableColor(darkCardBg, "#6f5940", "#f4dfbf");
+  next.shopMutedOnChip = ensureReadableColor(mixThemeColor(next.shopOnChip, gold, 82), chipBg, 3.2);
   next.shopMutedOnOrder = ensureReadableColor(mixThemeColor(next.shopOnOrder, gold, 80), orderBg, 3.2);
   next.shopMutedOnSource = ensureReadableColor(mixThemeColor(next.shopOnSource, goldSoft, 78), sourceBg, 3.2);
   next.shopMutedOnBubble = ensureReadableColor(mixThemeColor(next.shopOnBubble, gold, 82), bubbleBg, 3.2);
@@ -1033,6 +1051,8 @@ function createInitialState() {
     pendingReport: null,
     lastNewItemId: "botanical-1",
     lastRareEvent: null,
+    decorPositions: {},
+    decorSlotPositions: {},
   };
 }
 
@@ -1052,6 +1072,12 @@ function loadState() {
     };
     parsed.pendingReport = parsed.pendingReport || null;
     parsed.lastRareEvent = parsed.lastRareEvent || null;
+    parsed.decorPositions =
+      parsed.decorPositions && typeof parsed.decorPositions === "object" ? parsed.decorPositions : {};
+    parsed.decorSlotPositions =
+      parsed.decorSlotPositions && typeof parsed.decorSlotPositions === "object"
+        ? parsed.decorSlotPositions
+        : {};
     sourceConfigs.forEach((source) => {
       const existingSource = parsed.sources?.[source.id];
       if (!existingSource) {
@@ -1196,28 +1222,30 @@ function render() {
 
 function renderShopDecorations() {
   if (!elements.shopDecorations) return;
+  if (decorDragState || decorResizeState) return;
 
   const savedPositions = loadDecorPositions();
-  const nextKey = JSON.stringify({ stickers: decorationStickers, savedPositions });
+  const savedSlotPositions = loadDecorSlotPositions();
+  const nextKey = JSON.stringify({ stickers: decorationStickers, savedPositions, savedSlotPositions });
   if (nextKey === shopDecorationKey) return;
   shopDecorationKey = nextKey;
-  const hasSavedPositions = Object.keys(savedPositions).length > 0;
 
   elements.shopDecorations.innerHTML = `
-    <div class="shop-decor-tray${hasSavedPositions ? " is-customized" : ""}" aria-hidden="true">
+    <div class="shop-decor-tray" aria-hidden="true">
       <strong>装饰贴纸</strong>
       <span>拖到店里摆放，角标可缩放</span>
     </div>
   ${decorationStickers
     .map(
       (sticker, index) => {
-        const position = savedPositions[sticker.id] || sticker;
+        const position = savedPositions[sticker.id] || savedSlotPositions[String(index)] || sticker;
         const decorZ = getDecorZIndex(position.top, index);
         return `
         <button
           class="shop-decor-sticker shop-decor-sticker-${index + 1}"
           type="button"
           data-decor-id="${sticker.id}"
+          data-decor-index="${index}"
           style="--decor-left: ${position.left}%; --decor-top: ${position.top}%; --decor-width: ${position.width}px; --decor-z: ${decorZ};"
           aria-label="移动店铺装饰"
         >
@@ -1251,22 +1279,70 @@ function getDecorMaxWidth() {
 }
 
 function loadDecorPositions() {
+  const statePositions = filterDecorPositions(state?.decorPositions || {});
+  if (Object.keys(statePositions).length) return statePositions;
+
   try {
     const saved = JSON.parse(window.localStorage.getItem(DECOR_STORAGE_KEY) || "{}");
-    if (saved.defaultKey !== getDecorDefaultKey()) return {};
-    return saved.positions || {};
+    if (saved.scopeKey && saved.scopeKey !== getDecorScopeKey()) return {};
+
+    const assetKey = getDecorAssetKey();
+    if (saved.assetKey && saved.assetKey !== assetKey) return {};
+
+    if (!saved.scopeKey && !saved.assetKey && saved.defaultKey) {
+      const legacyAssetKey = getLegacyDecorAssetKey(saved.defaultKey);
+      if (legacyAssetKey && legacyAssetKey !== assetKey) return {};
+      if (!legacyAssetKey && saved.defaultKey !== getDecorDefaultKey()) return {};
+    }
+
+    const legacyPositions = filterDecorPositions(saved.positions || {});
+    if (Object.keys(legacyPositions).length && state) {
+      state.decorPositions = legacyPositions;
+      state.decorSlotPositions = mapDecorPositionsToSlots(legacyPositions);
+      persistState();
+    }
+    return legacyPositions;
   } catch {
     return {};
   }
 }
 
+function loadDecorSlotPositions() {
+  const stateSlotPositions = filterDecorSlotPositions(state?.decorSlotPositions || {});
+  if (Object.keys(stateSlotPositions).length) return stateSlotPositions;
+
+  const byIdPositions = filterDecorPositions(state?.decorPositions || {});
+  if (!Object.keys(byIdPositions).length) return {};
+
+  const slotPositions = mapDecorPositionsToSlots(byIdPositions);
+  if (Object.keys(slotPositions).length && state) {
+    state.decorSlotPositions = slotPositions;
+    persistState();
+  }
+  return slotPositions;
+}
+
 function saveDecorPosition(decorId, nextPosition) {
   const savedPositions = loadDecorPositions();
+  const savedSlotPositions = loadDecorSlotPositions();
+  const decorIndex = getDecorIndexById(decorId);
   savedPositions[decorId] = nextPosition;
+  if (decorIndex !== -1) {
+    savedSlotPositions[String(decorIndex)] = nextPosition;
+  }
+  state.decorPositions = filterDecorPositions(savedPositions);
+  state.decorSlotPositions = filterDecorSlotPositions(savedSlotPositions);
+  persistState();
   try {
     window.localStorage.setItem(
       DECOR_STORAGE_KEY,
-      JSON.stringify({ defaultKey: getDecorDefaultKey(), positions: savedPositions }),
+      JSON.stringify({
+        scopeKey: getDecorScopeKey(),
+        assetKey: getDecorAssetKey(),
+        defaultKey: getDecorDefaultKey(),
+        positions: savedPositions,
+        slotPositions: savedSlotPositions,
+      }),
     );
   } catch (error) {
     console.error("Failed to save decor position", error);
@@ -1276,6 +1352,80 @@ function saveDecorPosition(decorId, nextPosition) {
 
 function getDecorDefaultKey() {
   return JSON.stringify(decorationStickers);
+}
+
+function getDecorScopeKey() {
+  return JSON.stringify({
+    shopName: runtimeConfig.shopName || DEFAULT_STORE_NAME,
+    worldName: runtimeConfig.worldName || DEFAULT_WORLD_NAME,
+    manifest: runtimeConfig.decorationManifestUrl || "default-decor",
+  });
+}
+
+function getDecorAssetKey() {
+  return JSON.stringify(
+    decorationStickers.map((sticker) => ({
+      id: sticker.id,
+      url: sticker.url,
+    })),
+  );
+}
+
+function getLegacyDecorAssetKey(defaultKey) {
+  try {
+    const parsed = JSON.parse(defaultKey);
+    if (!Array.isArray(parsed)) return "";
+    return JSON.stringify(
+      parsed.map((sticker) => ({
+        id: sticker.id,
+        url: sticker.url,
+      })),
+    );
+  } catch {
+    return "";
+  }
+}
+
+function filterDecorPositions(positions) {
+  const stickerIds = new Set(decorationStickers.map((sticker) => sticker.id));
+  return Object.fromEntries(
+    Object.entries(positions || {}).filter(([decorId, position]) => {
+      return (
+        stickerIds.has(decorId) &&
+        Number.isFinite(Number.parseFloat(position?.left)) &&
+        Number.isFinite(Number.parseFloat(position?.top)) &&
+        Number.isFinite(Number.parseFloat(position?.width))
+      );
+    }),
+  );
+}
+
+function filterDecorSlotPositions(positions) {
+  return Object.fromEntries(
+    Object.entries(positions || {}).filter(([slotIndex, position]) => {
+      const index = Number.parseInt(slotIndex, 10);
+      return (
+        Number.isInteger(index) &&
+        index >= 0 &&
+        index < decorationStickers.length &&
+        Number.isFinite(Number.parseFloat(position?.left)) &&
+        Number.isFinite(Number.parseFloat(position?.top)) &&
+        Number.isFinite(Number.parseFloat(position?.width))
+      );
+    }),
+  );
+}
+
+function getDecorIndexById(decorId) {
+  return decorationStickers.findIndex((sticker) => sticker.id === decorId);
+}
+
+function mapDecorPositionsToSlots(positions) {
+  return Object.fromEntries(
+    decorationStickers
+      .map((sticker, index) => [String(index), positions?.[sticker.id]])
+      .filter(([, position]) => position),
+  );
 }
 
 function handleDecorPointerDown(event) {

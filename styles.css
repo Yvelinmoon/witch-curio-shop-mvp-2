@@ -21,9 +21,14 @@
   --shop-ink: #3a2414;
   --shop-muted: #b89964;
   --shop-on-panel: var(--shop-text);
+  --shop-on-panel-2: var(--shop-text);
   --shop-on-paper: var(--shop-ink);
   --shop-on-card: var(--shop-ink);
   --shop-on-dark: #fff7e8;
+  --shop-on-accent: #2b1a10;
+  --shop-on-chip: #2b1a10;
+  --shop-on-green-chip: #2b1a10;
+  --shop-on-red: #050505;
   --shop-on-order: var(--shop-on-card);
   --shop-on-source: var(--shop-on-dark);
   --shop-on-button: #fff7e8;
@@ -35,9 +40,11 @@
   --shop-on-error: var(--shop-on-paper);
   --shop-on-success: var(--shop-on-paper);
   --shop-muted-on-panel: var(--shop-muted);
+  --shop-muted-on-panel-2: var(--shop-muted);
   --shop-muted-on-paper: #6f5940;
   --shop-muted-on-card: #6f5940;
   --shop-muted-on-dark: #f4dfbf;
+  --shop-muted-on-chip: #6f5940;
   --shop-muted-on-order: var(--shop-muted-on-card);
   --shop-muted-on-source: var(--shop-muted-on-dark);
   --shop-muted-on-bubble: var(--shop-muted-on-card);
@@ -203,10 +210,6 @@ button {
     color-mix(in srgb, var(--shop-paper) 46%, transparent);
   color: var(--shop-on-paper);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--shop-sheen) 20%, transparent), 0 8px 0 color-mix(in srgb, var(--shop-border-dark) 12%, transparent);
-  opacity: 0.92;
-}
-
-.shop-decor-tray.is-customized {
   opacity: 0.24;
   padding-bottom: 12px;
 }
@@ -1134,7 +1137,7 @@ button {
   border: 2px solid color-mix(in srgb, var(--shop-ink) 28%, transparent);
   border-radius: 999px;
   background: color-mix(in srgb, var(--shop-gold-soft) 36%, var(--shop-paper));
-  color: var(--shop-on-paper);
+  color: var(--shop-on-chip);
   font-size: 9px;
   letter-spacing: 0.04em;
 }
@@ -1160,7 +1163,7 @@ button {
   border: 2px solid var(--shop-border-dark);
   border-radius: 999px;
   background: color-mix(in srgb, var(--shop-gold-soft) 28%, var(--shop-paper));
-  color: var(--shop-on-paper);
+  color: var(--shop-on-chip);
   font-size: 12px;
 }
 
@@ -1374,7 +1377,7 @@ button {
 
 .panel-tab.active {
   background: linear-gradient(180deg, var(--shop-gold-soft), var(--shop-gold));
-  color: var(--shop-on-paper);
+  color: var(--shop-on-accent);
 }
 
 .tab-panel {
@@ -1434,7 +1437,7 @@ button {
   border-style: solid;
   box-shadow: 0 6px 0 0 var(--shop-shadow-strong);
   padding: 8px 10px 9px;
-  color: var(--shop-on-paper);
+  color: var(--shop-on-panel-2);
 }
 
 .source-card-single {
@@ -1537,7 +1540,7 @@ button {
   border: 2px solid color-mix(in srgb, var(--shop-ink) 26%, transparent);
   border-radius: 999px;
   background: color-mix(in srgb, var(--shop-gold-soft) 28%, var(--shop-paper));
-  color: var(--shop-on-paper);
+  color: var(--shop-on-chip);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -1547,14 +1550,14 @@ button {
 .source-blurb {
   margin: 3px 0 0;
   max-width: 210px;
-  color: var(--shop-muted-on-paper);
+  color: var(--shop-muted-on-panel-2);
   font-size: 11px;
   line-height: 1.3;
 }
 
 .source-product {
   margin: 5px 0 0;
-  color: var(--shop-muted-on-paper);
+  color: var(--shop-muted-on-panel-2);
   font-size: 11px;
   line-height: 1.2;
 }
@@ -1672,14 +1675,14 @@ button {
   border: 2px solid color-mix(in srgb, var(--shop-ink) 22%, transparent);
   border-radius: 999px;
   background: color-mix(in srgb, var(--shop-gold-soft) 30%, var(--shop-paper));
-  color: var(--shop-on-paper);
+  color: var(--shop-on-chip);
   font-size: 10px;
   line-height: 1;
 }
 
 .source-meta-pill strong {
   font-size: 11px;
-  color: var(--shop-on-paper);
+  color: var(--shop-on-chip);
 }
 
 .source-switcher {
@@ -1693,7 +1696,7 @@ button {
   border-radius: 12px;
   padding: 7px 6px;
   background: var(--shop-panel-2);
-  color: var(--shop-on-panel);
+  color: var(--shop-on-panel-2);
   font-size: 11px;
   font-weight: 800;
   cursor: pointer;
@@ -1702,7 +1705,7 @@ button {
 
 .source-switch.active {
   background: linear-gradient(180deg, var(--shop-gold-soft), var(--shop-gold));
-  color: var(--shop-on-paper);
+  color: var(--shop-on-accent);
   box-shadow: 0 4px 0 0 var(--shop-shadow-mid);
 }
 
@@ -1725,7 +1728,7 @@ button {
   border: 2px solid color-mix(in srgb, var(--shop-border-dark) 18%, transparent);
   border-radius: 999px;
   background: color-mix(in srgb, var(--shop-green) 20%, var(--shop-paper));
-  color: var(--shop-on-success);
+  color: var(--shop-on-green-chip);
   font-size: 10px;
 }
 
@@ -1747,7 +1750,7 @@ button {
   border: 2px solid color-mix(in srgb, var(--shop-ink) 20%, transparent);
   border-radius: 999px;
   background: color-mix(in srgb, var(--shop-gold-soft) 48%, var(--shop-paper));
-  color: var(--shop-on-paper);
+  color: var(--shop-on-chip);
   font-size: 10px;
 }
 
@@ -1969,7 +1972,7 @@ button {
 
 .library-tab.active {
   background: linear-gradient(180deg, var(--shop-gold-soft), var(--shop-gold));
-  color: var(--shop-on-paper);
+  color: var(--shop-on-accent);
 }
 
 .library-content {
@@ -2182,7 +2185,7 @@ button {
   border: 2px solid color-mix(in srgb, var(--shop-ink) 28%, transparent);
   border-radius: 999px;
   background: color-mix(in srgb, var(--shop-gold-soft) 55%, var(--shop-paper));
-  color: var(--shop-on-paper);
+  color: var(--shop-on-chip);
   font-size: 11px;
   font-weight: 700;
 }
@@ -2241,7 +2244,7 @@ button {
   border: 2px solid color-mix(in srgb, var(--shop-border-dark) 18%, transparent);
   border-radius: 999px;
   background: color-mix(in srgb, var(--shop-green) 20%, var(--shop-paper));
-  color: var(--shop-on-success);
+  color: var(--shop-on-green-chip);
   font-size: 13px;
   font-weight: 700;
 }
@@ -2329,7 +2332,7 @@ button {
 
 .intro-actions {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 10px;
   margin-top: 18px;
 }
@@ -2510,7 +2513,7 @@ body.creator-page-active {
   border: 2px solid color-mix(in srgb, var(--shop-border-dark) 14%, transparent);
   border-radius: 999px;
   background: color-mix(in srgb, var(--shop-paper) 72%, transparent);
-  color: var(--shop-muted-on-paper);
+  color: var(--shop-muted-on-chip);
   font-size: 11px;
   font-weight: 700;
 }
@@ -4791,6 +4794,7 @@ body::before {
   .order-actions,
   .intro-actions {
     flex-direction: column;
+    align-items: flex-end;
   }
 
   .intro-card {

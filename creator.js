@@ -37,8 +37,62 @@
     shopText: "#4a3728",
     shopInk: "#3a2414",
     shopMuted: "#7f6a4d",
+    shopOnPanel: "#4a3728",
+    shopOnPanel2: "#4a3728",
+    shopOnPaper: "#3a2414",
+    shopOnCard: "#3a2414",
+    shopOnDark: "#fff7e8",
+    shopOnAccent: "#2b1a10",
+    shopOnChip: "#2b1a10",
+    shopOnGreenChip: "#2b1a10",
+    shopOnRed: "#050505",
+    shopOnOrder: "#3a2414",
+    shopOnSource: "#fff7e8",
+    shopOnButton: "#fff7e8",
+    shopOnSecondary: "#3a2414",
+    shopOnBubble: "#3a2414",
+    shopOnWaste: "#fff7e8",
+    shopOnRare: "#3a2414",
+    shopOnLegendary: "#3a2414",
+    shopOnError: "#3a2414",
+    shopOnSuccess: "#3a2414",
+    shopMutedOnPanel: "#7f6a4d",
+    shopMutedOnPanel2: "#7f6a4d",
+    shopMutedOnPaper: "#6f5940",
+    shopMutedOnCard: "#6f5940",
+    shopMutedOnDark: "#f4dfbf",
+    shopMutedOnChip: "#6f5940",
+    shopMutedOnOrder: "#6f5940",
+    shopMutedOnSource: "#f4dfbf",
+    shopMutedOnBubble: "#6f5940",
   };
-  const THEME_TOKEN_KEYS = Object.keys(DEFAULT_CREATOR_THEME);
+  const THEME_TOKEN_KEYS = [
+    "bgTop",
+    "bgBottom",
+    "paper",
+    "paperSoft",
+    "gold",
+    "shopBgTop",
+    "shopBgMid",
+    "shopBgBottom",
+    "shopLight",
+    "shopLightSoft",
+    "shopPanel",
+    "shopPanel2",
+    "shopPaper",
+    "shopPaperSoft",
+    "shopCard",
+    "shopCardDark",
+    "shopBorder",
+    "shopBorderDark",
+    "shopGold",
+    "shopGoldSoft",
+    "shopGreen",
+    "shopRed",
+    "shopText",
+    "shopInk",
+    "shopMuted",
+  ];
   const BUILD_PROGRESS_STEPS = [
     { id: "theme", label: "主题定好", matches: ["定下店铺氛围"] },
     { id: "portrait", label: "助手到位", matches: ["等待店员到来", "店员到位"] },
@@ -350,6 +404,7 @@
   function normalizeThemeContrast(tokens) {
     const next = { ...tokens };
     const panelBg = next.shopPanel || next.paper || DEFAULT_CREATOR_THEME.shopPanel;
+    const panel2Bg = next.shopPanel2 || panelBg;
     const paperBg = next.shopPaper || next.paper || DEFAULT_CREATOR_THEME.shopPaper;
     const cardBg = next.shopCard || next.shopPaper || DEFAULT_CREATOR_THEME.shopCard;
     const darkCardBg = next.shopCardDark || next.shopPanel2 || DEFAULT_CREATOR_THEME.shopCardDark;
@@ -365,15 +420,23 @@
     const buttonBg = mixThemeColor(gold, borderDark, 76);
     const secondaryBg = mixThemeColor(goldSoft, next.shopPanel2 || panelBg, 48);
     const bubbleBg = mixThemeColor(cardBg, goldSoft, 88);
+    const accentBg = mixThemeColor(goldSoft, gold, 52);
+    const chipBg = mixThemeColor(goldSoft, paperBg, 30);
+    const greenChipBg = mixThemeColor(green, paperBg, 20);
     const wasteBg = mixThemeColor(borderDark, "#000000", 86);
     const rareBg = mixThemeColor(next.shopPaperSoft || paperBg, green, 78);
     const legendaryBg = mixThemeColor(next.shopPaperSoft || paperBg, gold, 72);
     const errorBg = mixThemeColor(red, paperBg, 18);
     const successBg = mixThemeColor(green, paperBg, 20);
     next.shopOnPanel = pickReadableColor(panelBg);
+    next.shopOnPanel2 = pickReadableColor(panel2Bg);
     next.shopOnPaper = pickReadableColor(paperBg);
     next.shopOnCard = pickReadableColor(cardBg);
     next.shopOnDark = pickReadableColor(darkCardBg);
+    next.shopOnAccent = pickReadableColor(accentBg);
+    next.shopOnChip = pickReadableColor(chipBg);
+    next.shopOnGreenChip = pickReadableColor(greenChipBg);
+    next.shopOnRed = pickReadableColor(red, "#050505", "#fff7e8");
     next.shopOnOrder = pickReadableColor(orderBg);
     next.shopOnSource = pickReadableColor(sourceBg);
     next.shopOnButton = pickReadableColor(buttonBg);
@@ -385,9 +448,11 @@
     next.shopOnError = pickReadableColor(errorBg);
     next.shopOnSuccess = pickReadableColor(successBg);
     next.shopMutedOnPanel = pickReadableColor(panelBg, "#6f5940", "#f4dfbf");
+    next.shopMutedOnPanel2 = pickReadableColor(panel2Bg, "#6f5940", "#f4dfbf");
     next.shopMutedOnPaper = pickReadableColor(paperBg, "#6f5940", "#f4dfbf");
     next.shopMutedOnCard = pickReadableColor(cardBg, "#6f5940", "#f4dfbf");
     next.shopMutedOnDark = pickReadableColor(darkCardBg, "#6f5940", "#f4dfbf");
+    next.shopMutedOnChip = ensureReadableColor(mixThemeColor(next.shopOnChip, gold, 82), chipBg, 3.2);
     next.shopMutedOnOrder = ensureReadableColor(mixThemeColor(next.shopOnOrder, gold, 80), orderBg, 3.2);
     next.shopMutedOnSource = ensureReadableColor(mixThemeColor(next.shopOnSource, goldSoft, 78), sourceBg, 3.2);
     next.shopMutedOnBubble = ensureReadableColor(mixThemeColor(next.shopOnBubble, gold, 82), bubbleBg, 3.2);
