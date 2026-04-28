@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>世界商店建造 MVP</title>
+    <title>世界商店开张</title>
     <link
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23f7d88f'/%3E%3Cpath d='M16 12h8v18h16V12h8v40h-8V38H24v14h-8z' fill='%234b3829'/%3E%3C/svg%3E"
@@ -17,40 +17,50 @@
 
       <header class="topbar">
         <div class="brand-block">
-          <div class="brand-mark">H</div>
           <div class="brand-copy">
-            <p id="brandEyebrow" class="eyebrow">Room of Requirement</p>
-            <strong id="brandTitle" class="brand-title">有求必应屋杂货店</strong>
+            <p id="brandEyebrow" class="eyebrow" hidden>Room of Requirement</p>
+            <div class="brand-title-row">
+              <strong id="brandTitle" class="brand-title">有求必应屋杂货店</strong>
+              <span id="brandRankLabel" class="brand-rank-label">筹备开张</span>
+            </div>
             <div class="brand-level-line">
               <span class="brand-level-chip">Lv.<strong id="levelValue">1</strong></span>
-              <span id="brandRankLabel" class="brand-rank-label">筹备开张</span>
+              <span class="brand-gold" aria-label="金币">
+                <span class="brand-gold-label">金币</span>
+                <strong id="goldValue">0</strong>
+              </span>
             </div>
           </div>
         </div>
 
-        <div class="status-bar">
-          <div class="stat-card">
-            <span class="stat-label">金币</span>
-            <strong id="goldValue">0</strong>
-          </div>
-          <button id="openHallButton" class="stat-card stat-action-card" type="button">
-            <span class="stat-label">大厅</span>
-            <strong>排行榜</strong>
-          </button>
-          <button id="openCodexButton" class="stat-card stat-action-card" type="button">
-            <span class="stat-label">图鉴</span>
-            <strong id="discoveriesValue">0 / 32</strong>
-          </button>
-          <button id="openShelfButton" class="stat-card stat-action-card" type="button">
-            <span class="stat-label">收藏</span>
-            <strong id="shelfCountValue">0 / 4</strong>
-          </button>
-          <button id="resetButton" class="ghost-button" type="button">重新开始</button>
-        </div>
       </header>
 
       <main class="layout">
         <section class="panel play-panel">
+          <div id="shopDecorations" class="shop-decorations" aria-hidden="true"></div>
+
+          <div class="status-bar" aria-label="店铺快捷操作">
+            <button id="openHallButton" class="stat-card stat-action-card status-action" type="button" aria-label="大厅排行榜">
+              <span class="status-icon" aria-hidden="true"><img data-ui-sticker="hall" src="/generated/shop-stickers/hp-wood/sticker_15_platform-nine.png" alt="" /></span>
+              <span class="stat-label">大厅</span>
+              <strong>榜单</strong>
+            </button>
+            <button id="openCodexButton" class="stat-card stat-action-card status-action" type="button" aria-label="图鉴">
+              <span class="status-icon" aria-hidden="true"><img data-ui-sticker="codex" src="/generated/shop-stickers/hp-wood/sticker_08_spell-book.png" alt="" /></span>
+              <span class="stat-label">图鉴</span>
+              <strong id="discoveriesValue">0 / 32</strong>
+            </button>
+            <button id="openShelfButton" class="stat-card stat-action-card status-action" type="button" aria-label="收藏">
+              <span class="status-icon" aria-hidden="true"><img data-ui-sticker="shelf" src="/generated/shop-stickers/hp-wood/sticker_10_hogwarts-crest.png" alt="" /></span>
+              <span class="stat-label">收藏</span>
+              <strong id="shelfCountValue">0 / 4</strong>
+            </button>
+            <button id="resetButton" class="status-action reset-status-action" type="button" aria-label="重新开始">
+              <span class="status-icon" aria-hidden="true"><img data-ui-sticker="reset" src="/generated/shop-stickers/hp-wood/sticker_13_time-turner.png" alt="" /></span>
+              <span class="stat-label">重开</span>
+            </button>
+          </div>
+
           <div class="board-ribbon board-ribbon-ticker">
             <div class="board-ticker-window">
               <div class="board-ticker-track">
@@ -64,32 +74,17 @@
 
           <div class="play-footer">
             <button id="trashBin" class="trash-bin" type="button" aria-label="垃圾桶">
-              <span class="trash-bin-icon">🗑</span>
+              <span class="trash-bin-icon"><img data-ui-sticker="trash" src="/generated/shop-stickers/hp-wood/sticker_06_cauldron.png" alt="" /></span>
               <span class="trash-bin-copy">
                 <strong>垃圾桶</strong>
                 <span>把废料或多余材料拖过来丢掉</span>
               </span>
             </button>
-
-            <div class="legend-row">
-              <div class="legend-chip">
-                <span class="legend-dot dot-discovery"></span>
-                新发现
-              </div>
-              <div class="legend-chip">
-                <span class="legend-dot dot-rare"></span>
-                稀有事件
-              </div>
-              <div class="legend-chip">
-                <span class="legend-dot dot-tint"></span>
-                货线底色
-              </div>
-            </div>
           </div>
         </section>
 
         <aside class="sidebar">
-          <section class="panel side-panel panel-left">
+          <section class="panel side-panel assistant-panel">
             <div class="assistant-card">
               <div class="assistant-stage">
                 <div class="assistant-portrait-panel">
@@ -109,18 +104,17 @@
                   <div class="assistant-bubble">
                     <p id="assistantLine" class="assistant-line">店主，今天先把第一张订单做出来，我会继续盯着猫头鹰来信。</p>
                   </div>
-                  <div class="assistant-meta">
-                    <span id="assistantFocus">今日重点：先开张</span>
-                    <span id="assistantStatus">店铺仍在筹备期</span>
-                  </div>
+                  <span id="assistantFocus" hidden>今日重点：先开张</span>
+                  <span id="assistantStatus" hidden>店铺仍在筹备期</span>
                 </div>
               </div>
             </div>
+          </section>
 
+          <section class="panel side-panel panel-left task-panel">
             <div class="panel-tabs" id="leftTabs">
               <button class="panel-tab active" data-panel-tab="orders" type="button">委托</button>
               <button class="panel-tab" data-panel-tab="sources" type="button">补给</button>
-              <button class="panel-tab" data-panel-tab="events" type="button">异象</button>
             </div>
 
             <div class="tab-panels">
@@ -132,7 +126,7 @@
                 <div id="sourceList" class="source-list"></div>
               </section>
 
-              <section class="tab-panel" data-panel-view="events">
+              <section class="tab-panel event-tab-panel" data-panel-view="events" hidden>
                 <div id="dailyEventCard" class="event-card"></div>
               </section>
             </div>
@@ -256,25 +250,25 @@
 
     <section id="creatorOverlay" class="creator-page">
       <div class="creator-page-shell" aria-labelledby="creatorTitle">
-        <p id="creatorWorldEyebrow" class="sr-only">霍格沃茨 · 世界商店创建</p>
-        <div id="creatorPhaseChip" class="creator-phase-chip" hidden>建店前夜</div>
-        <h2 id="creatorTitle" class="sr-only">世界商店创建</h2>
+        <p id="creatorWorldEyebrow" class="sr-only">世界商店开张</p>
+        <div id="creatorPhaseChip" class="creator-phase-chip" hidden>开店前夜</div>
+        <h2 id="creatorTitle" class="sr-only">世界商店开张</h2>
 
         <section id="creatorIdeaStep" class="creator-step">
           <div class="creator-center-wrap">
             <div class="creator-entry-minimal-shell">
               <p class="creator-entry-line" id="creatorNarration">
-                这个世界正在有条不紊地建设中。为了持续获得建设资源，你决定先开一间主体店铺。想开什么店铺？
+                这个世界正在有条不紊地建设中。在经营这个世界的过程中，你决定先开一间主题店铺。想开什么店铺？
               </p>
               <div class="creator-auth-row">
                 <div class="creator-auth-copy">
-                  <strong id="netaAuthStatus" class="creator-auth-status">尚未连接 Neta</strong>
-                  <span id="netaAuthHint" class="creator-auth-hint">先连接 Neta，建店草案和角色对话才会走平台 LLM。</span>
-                  <span id="creatorAgentHint" class="creator-agent-hint">当前 Agent：读取中</span>
+                  <strong id="netaAuthStatus" class="creator-auth-status">Neta 通行证未连接</strong>
+                  <span id="netaAuthHint" class="creator-auth-hint">连接后，店员才能收到你的开店信。</span>
+                  <span id="creatorAgentHint" class="creator-agent-hint">送信人：等回音</span>
                 </div>
                 <div class="creator-auth-actions">
-                  <button id="creatorHallButton" class="secondary-button" type="button">去大厅</button>
-                  <button id="llmProbeButton" class="secondary-button" type="button" disabled>测试 LLM</button>
+                  <button id="creatorHallButton" class="secondary-button" type="button" hidden>去大厅</button>
+                  <button id="llmProbeButton" class="secondary-button" type="button" disabled hidden>试音</button>
                   <button id="netaAuthButton" class="secondary-button" type="button">连接 Neta</button>
                 </div>
               </div>
@@ -298,17 +292,17 @@
         <section id="creatorConfirmStep" class="creator-step" hidden>
           <div class="creator-center-wrap">
             <div class="creator-summary-card creator-summary-card-centered">
-              <p class="section-kicker">建店草案</p>
+              <p class="section-kicker">开店方案</p>
               <h3 id="conceptShopName">夜巡奇物铺</h3>
               <p id="conceptSummary" class="creator-summary-text"></p>
               <div class="creator-summary-grid">
                 <article class="creator-summary-block">
-                  <p class="section-kicker">店员助手</p>
+                  <p class="section-kicker">店员</p>
                   <strong id="conceptAssistantName">赫敏</strong>
                   <p id="conceptAssistantSummary" class="creator-summary-mini"></p>
                 </article>
                 <article class="creator-summary-block">
-                  <p class="section-kicker">经营定位</p>
+                  <p class="section-kicker">开张节奏</p>
                   <p id="conceptLoopSummary" class="creator-summary-mini"></p>
                 </article>
               </div>
@@ -327,8 +321,8 @@
               <div class="creator-stage-frame">
                 <img id="loadingAssistantPortrait" class="creator-assistant-art" alt="店员助手立绘" />
                 <div id="portraitLoadingCard" class="creator-portrait-loading" hidden>
-                  <strong id="portraitLoadingTitle">等待助手到来</strong>
-                  <span id="portraitLoadingStatus">正在生成角色立绘</span>
+                  <strong id="portraitLoadingTitle">店员正在路上</strong>
+                  <span id="portraitLoadingStatus">正在赶来上班</span>
                 </div>
               </div>
               <div class="creator-stage-nameplate">
@@ -345,20 +339,9 @@
                 </button>
               </div>
 
-              <div id="creatorBuildProgress" class="creator-build-progress" aria-label="建店进度">
-                <div class="creator-build-progress-head">
-                  <span>建店进度</span>
-                  <strong id="creatorBuildProgressMeta">等待开始</strong>
-                </div>
-                <div class="creator-build-progress-bar" aria-hidden="true">
-                  <div id="creatorBuildProgressFill" class="creator-build-progress-fill"></div>
-                </div>
-                <div id="creatorBuildProgressSteps" class="creator-build-progress-steps"></div>
-              </div>
-
               <div id="playerPromptEcho" class="creator-player-echo" hidden></div>
               <p id="loadingDialogueText" class="creator-dialogue-text">
-                我先把这家店的柜台、助手位置和第一批货线整理出来。
+                我先把柜台擦亮，再看看第一批客人会带来什么需求。
               </p>
 
               <div id="buildActionRow" class="creator-actions creator-actions-inline" hidden>
@@ -376,9 +359,20 @@
                 id="loadingChatInput"
                 class="creator-chat-input"
                 type="text"
-                placeholder="输入一句想问赫敏的话"
+                placeholder="输入一句想问店员的话"
               />
               <button id="sendLoadingChatButton" class="secondary-button creator-send-button" type="button">发送</button>
+            </div>
+
+            <div id="creatorBuildProgress" class="creator-build-progress" aria-label="开店准备进度">
+              <div class="creator-build-progress-head">
+                <span>开店准备</span>
+                <strong id="creatorBuildProgressMeta">等店员到岗</strong>
+              </div>
+              <div class="creator-build-progress-bar" aria-hidden="true">
+                <div id="creatorBuildProgressFill" class="creator-build-progress-fill"></div>
+              </div>
+              <div id="creatorBuildProgressSteps" class="creator-build-progress-steps"></div>
             </div>
           </div>
         </section>

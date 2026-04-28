@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "generatedAt": "2026-04-27T09:28:12.271Z",
+  "sheet": {
+    "path": "/Users/yves/witch-curio-shop-mvp-2/generated/build-artifacts/job_1777281962907_4f021e/assistant_sheet_1x4.png",
+    "width": 1600,
+    "height": 900
+  },
+  "order": [
+    "smile",
+    "serious",
+    "angry",
+    "confused"
+  ],
+  "portraits": {
+    "smile": {
+      "fileName": "smile.png",
+      "url": "/generated/build-artifacts/job_1777281962907_4f021e/assistant_portraits/smile.png"
+    },
+    "serious": {
+      "fileName": "serious.png",
+      "url": "/generated/build-artifacts/job_1777281962907_4f021e/assistant_portraits/serious.png"
+    },
+    "angry": {
+      "fileName": "angry.png",
+      "url": "/generated/build-artifacts/job_1777281962907_4f021e/assistant_portraits/angry.png"
+    },
+    "confused": {
+      "fileName": "confused.png",
+      "url": "/generated/build-artifacts/job_1777281962907_4f021e/assistant_portraits/confused.png"
+    }
+  }
+}

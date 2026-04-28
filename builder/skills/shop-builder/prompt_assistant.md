@@ -5,7 +5,7 @@ Use the image-gen prompt template below:
 {character_name}, {age_and_gender}, {distinctive_feature_1}, {distinctive_feature_2},
 wearing {outfit_description},
 {expression}, {body_frame} portrait,
-clean casual game UI icon style, soft colors, consistent proportions,
+clean casual game portrait style, soft colors, consistent proportions,
 pure white background, no text no labels no borders,
 four panels must be visually separated by generous empty white spacing,
 keep the character of each panel centered and smaller than the panel bounds,

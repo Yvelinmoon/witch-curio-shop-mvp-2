@@ -6,7 +6,9 @@
   "generationPlan": {
     "requiredImages": [
       "shop_sheet_4x8",
-      "assistant_sheet_1x4"
+      "assistant_sheet_1x4",
+      "shop_decor_stickers_2x3",
+      "ui_button_stickers_1x5"
     ],
       "optionalImages": [
         "theme_header"
@@ -15,6 +17,14 @@
         "rows": 4,
         "cols": 8,
         "script": "/Users/yves/witch-curio-shop-mvp-2/builder/scripts/split_image_grid.py"
+      },
+      "decorSplit": {
+        "rows": 2,
+        "cols": 3
+      },
+      "uiButtonSplit": {
+        "rows": 1,
+        "cols": 5
       }
     },
   "adapters": {

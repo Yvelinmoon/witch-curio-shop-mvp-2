@@ -1,6 +1,7 @@
 (function () {
   const CONFIG = window.NETA_CONFIG;
   const STORAGE_KEY = "ta_session";
+  const AUTH_RETURN_TO_KEY = "ta_auth_return_to";
 
   function b64url(input) {
     const bytes = input instanceof Uint8Array ? input : new Uint8Array(input);
@@ -65,6 +66,10 @@
       sessionStorage.setItem("pkce_verifier", verifier);
       sessionStorage.setItem("oauth_state", state);
       sessionStorage.setItem("oauth_nonce", nonce);
+      sessionStorage.setItem(
+        AUTH_RETURN_TO_KEY,
+        `${window.location.pathname}${window.location.search}${window.location.hash}`,
+      );
 
       const challenge = await pkceChallenge(verifier);
       const params = new URLSearchParams({
@@ -215,8 +220,10 @@
     async boot() {
       const params = new URLSearchParams(window.location.search);
       if (params.has("code") || params.has("error")) {
+        const returnTo = sessionStorage.getItem(AUTH_RETURN_TO_KEY) || window.location.pathname;
         await this.handleCallback(window.location.href);
-        window.history.replaceState({}, "", window.location.pathname);
+        sessionStorage.removeItem(AUTH_RETURN_TO_KEY);
+        window.history.replaceState({}, "", returnTo);
       }
       return this.isAuthenticated();
     },

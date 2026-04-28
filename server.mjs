@@ -1,5 +1,5 @@
 import { createServer } from "node:http";
-import { appendFile, readFile, writeFile, mkdir, stat, rm, readdir, rename } from "node:fs/promises";
+import { appendFile, readFile, writeFile, mkdir, stat, rm, readdir, rename, cp } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { ProxyAgent, fetch as undiciFetch } from "undici";
@@ -12,6 +12,7 @@ const SERVER_LOG_FILE = path.join(GENERATED_DIR, "server.log");
 const LAST_AGENT_HANDSHAKE_FILE = path.join(GENERATED_DIR, "last-agent-handshake.json");
 const LOCAL_AGENT_JOBS_DIR = path.join(GENERATED_DIR, "local-agent-jobs");
 const BUILD_ARTIFACTS_DIR = path.join(GENERATED_DIR, "build-artifacts");
+const RESET_BACKUPS_DIR = path.join(GENERATED_DIR, "reset-backups");
 const PROFILE_ROOT = path.join(PROJECT_ROOT, "builder", "skills", "shop-builder");
 const PORT = Number(process.env.PORT || 9999);
 const HOST = process.env.HOST || "localhost";
@@ -37,6 +38,7 @@ const jobs = new Map();
 await mkdir(GENERATED_DIR, { recursive: true });
 await mkdir(LOCAL_AGENT_JOBS_DIR, { recursive: true });
 await mkdir(BUILD_ARTIFACTS_DIR, { recursive: true });
+await mkdir(RESET_BACKUPS_DIR, { recursive: true });
 
 function formatLogChunk(value) {
   if (typeof value === "string") return value;
@@ -106,6 +108,8 @@ const builderPrompts = {
   concept: await readFile(path.join(PROFILE_ROOT, "prompt_concept.md"), "utf8"),
   shopSheet: await readFile(path.join(PROFILE_ROOT, "prompt_shop_sheet.md"), "utf8"),
   assistant: await readFile(path.join(PROFILE_ROOT, "prompt_assistant.md"), "utf8"),
+  shopDecorStickers: await readFile(path.join(PROFILE_ROOT, "prompt_shop_decor_stickers.md"), "utf8"),
+  uiButtonStickers: await readFile(path.join(PROFILE_ROOT, "prompt_ui_button_stickers.md"), "utf8"),
   worldPatch: await readFile(path.join(PROFILE_ROOT, "prompt_world_patch.md"), "utf8"),
 };
 
@@ -257,6 +261,29 @@ function getChainById(contentPack, chainId) {
   return (Array.isArray(contentPack?.chains) ? contentPack.chains : []).find((chain) => chain.id === chainId) || null;
 }
 
+function normalizeContentText(value) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function normalizeContentItem(item, fallbackName) {
+  if (Array.isArray(item)) {
+    return {
+      name: normalizeContentText(item[0]) || fallbackName,
+      description: normalizeContentText(item[1]) || "",
+    };
+  }
+  if (item && typeof item === "object") {
+    return {
+      name: normalizeContentText(item.name) || fallbackName,
+      description: normalizeContentText(item.description) || "",
+    };
+  }
+  return {
+    name: fallbackName,
+    description: "",
+  };
+}
+
 function clipText(value = "", maxChars = 72) {
   const normalized = String(value || "").trim().replace(/\s+/g, " ");
   if (!normalized) return "";
@@ -284,62 +311,67 @@ function buildContentPackContextLines(input = {}, concept = {}, options = {}) {
 
 function buildMetaContentPackPrompt(input = {}, concept = {}) {
   return [
-    "You are designing the short text layer for a merge shop game.",
-    "Return minified JSON only.",
+    "Design the short player-facing text layer for a merge shop game.",
+    "Output minified JSON only.",
+    "Output exactly one JSON object with the requested sections.",
     "Use simplified Chinese strings.",
-    "Keep every string short, practical, and theme-first.",
-    "Do not include reasoning, markdown, or explanations.",
+    "Keep every string short, practical, concrete, and theme-first.",
+    "All names and descriptions should sound like they belong inside the shop world.",
+    "Use concrete goods, shop roles, customer needs, tools, decorations, and daily operation language.",
     ...buildContentPackContextLines(input, concept),
-    "Return this JSON shape exactly:",
+    "JSON format:",
     "sources[{id,name,shortLabel,blurb}]",
     "clients[{name,role,requestFlavor}]",
     "blessings[{id,title,description,tags}]",
     "introSequence[{speaker,text}]",
-    "Hard constraints:",
+    "Structural notes:",
     "sources ids fixed and count fixed at 3: botanical, alchemy, curio",
-    "These ids are internal only. They do NOT mean plants, potions, or curios.",
+    "These ids are internal handles; visible source names should come from the chosen shop theme.",
     "The three sources should read like three concrete shop-facing stations that fit the chosen business theme.",
     "clients count fixed: 5",
     "blessings ids fixed and count fixed at 3: greenhouse, cauldron, owl",
     "introSequence count fixed: 4",
-    "All visible names and descriptions must prioritize the user's shop theme first.",
+    "All visible names and descriptions prioritize the user's shop theme first.",
     "The world setting is only flavor overlay and story framing.",
-    "No markdown fences. No explanation.",
+    "Output only the JSON object.",
   ].join("\n");
 }
 
 function buildCoreChainsPrompt(input = {}, concept = {}) {
   return [
-    "You are designing the main merchandise chains for a merge shop game.",
-    "Return minified JSON only.",
+    "Design the main merchandise chains for a merge shop game.",
+    "Output minified JSON only.",
+    "Output exactly one JSON object.",
     "Use simplified Chinese strings.",
-    "Keep every item name and description short and concrete.",
-    "Do not include reasoning, markdown, or explanations.",
+    "Keep every item name and description short, tangible, and shop-facing.",
+    "All item names should feel like physical goods handled in this shop.",
+    "Use concrete materials, intermediate goods, packaged goods, display goods, and customer-ready merchandise.",
     ...buildContentPackContextLines(input, concept, { includeSummary: true, summaryMaxChars: 80 }),
-    "Return this JSON shape exactly:",
+    "JSON format:",
     "chains[{id,label,items:[{name,description}]}]",
-    "Hard constraints:",
+    "Structural notes:",
     "Return exactly 3 chains: botanical, alchemy, curio",
     "botanical=6 items, alchemy=6 items, curio=6 items",
-    "These ids are internal only. They do NOT mean plants, potions, or curios.",
+    "These ids are internal handles; visible chain labels and item names should come from the chosen shop theme.",
     "All visible names must prioritize the user's shop theme first.",
     "The 18 items should be tangible, shop-relevant assets for this theme.",
-    "No markdown fences. No explanation.",
+    "Output only the JSON object.",
   ].join("\n");
 }
 
 function buildSpecialChainsPrompt(input = {}, concept = {}) {
   return [
-    "You are designing the special result chains for a merge shop game.",
-    "Return minified JSON only.",
+    "Design the failed-result and rare-result chains for a merge shop game.",
+    "Output minified JSON only.",
+    "Output exactly one JSON object.",
     "Use simplified Chinese strings.",
-    "Keep every item name and description short and concrete.",
-    "Do not include reasoning, markdown, or explanations.",
+    "Keep every item name and description short, tangible, and shop-facing.",
+    "Failed items should feel like believable shop mishaps; rare items should feel like delightful discoveries.",
     ...buildContentPackContextLines(input, concept, { includeSummary: true, summaryMaxChars: 80 }),
-    "Return this JSON shape exactly:",
+    "JSON format:",
     "chains[{id,label,items:[{name,description}]}]",
     "recipes[{ingredients,resultItemId,title,body}]",
-    "Hard constraints:",
+    "Structural notes:",
     "Return exactly 2 chains: waste, secret",
     "waste=6 items, secret=8 items",
     "recipes fixed exactly 3:",
@@ -348,7 +380,7 @@ function buildSpecialChainsPrompt(input = {}, concept = {}) {
     "3) alchemy-4 + curio-4 -> secret-4",
     "Waste items should feel like failed outputs for this shop theme.",
     "Secret items should feel like rare, surprising upgrades for this shop theme.",
-    "No markdown fences. No explanation.",
+    "Output only the JSON object.",
   ].join("\n");
 }
 
@@ -399,6 +431,126 @@ function mergeGeneratedContentPack(basePack, metaPart, corePart, specialPart) {
   };
 }
 
+function coerceText(value, fallback = "") {
+  const text = stripMetaAiText(value);
+  return text || fallback;
+}
+
+function normalizeStringArray(value, fallback = [], count = fallback.length) {
+  const source = Array.isArray(value) ? value : [];
+  const merged = [...source, ...fallback].map((item) => coerceText(item)).filter(Boolean);
+  return merged.slice(0, count || merged.length);
+}
+
+function coerceObjectListById(value, fallback = [], ids = []) {
+  const source = Array.isArray(value) ? value : [];
+  const sourceById = new Map(source.filter((item) => item && typeof item === "object").map((item) => [item.id, item]));
+  const fallbackById = new Map(fallback.map((item) => [item.id, item]));
+  return ids.map((id, index) => {
+    const current = sourceById.get(id) || source[index] || {};
+    const backup = fallbackById.get(id) || fallback[index] || { id };
+    return {
+      ...backup,
+      ...current,
+      id,
+    };
+  });
+}
+
+function coerceContentPackPart(sectionName, parsedPart, basePack) {
+  const part = parsedPart && typeof parsedPart === "object" ? parsedPart : {};
+  if (sectionName === "meta") {
+    return {
+      sources: coerceObjectListById(part.sources, basePack.sources, ["botanical", "alchemy", "curio"]).map((item, index) => ({
+        id: item.id,
+        name: coerceText(item.name, basePack.sources[index]?.name || item.id),
+        shortLabel: coerceText(item.shortLabel, basePack.sources[index]?.shortLabel || item.name || item.id),
+        blurb: coerceText(item.blurb, basePack.sources[index]?.blurb || "稳定补给当前店铺的基础货源。"),
+      })),
+      clients: Array.from({ length: 5 }, (_, index) => {
+        const item = Array.isArray(part.clients) ? part.clients[index] || {} : {};
+        const backup = basePack.clients[index] || {};
+        return {
+          name: coerceText(item.name, backup.name || `顾客${index + 1}`),
+          role: coerceText(item.role, backup.role || "临时顾客"),
+          requestFlavor: coerceText(item.requestFlavor, backup.requestFlavor || "需要一份适合当前店铺主题的货品。"),
+        };
+      }),
+      blessings: coerceObjectListById(part.blessings, basePack.blessings, ["greenhouse", "cauldron", "owl"]).map((item, index) => ({
+        id: item.id,
+        title: coerceText(item.title, basePack.blessings[index]?.title || "今日生意顺手"),
+        description: coerceText(item.description, basePack.blessings[index]?.description || "今天更容易获得额外进展。"),
+        tags: normalizeStringArray(item.tags, basePack.blessings[index]?.tags || ["进展更快", "惊喜更多"], 2),
+      })),
+      introSequence: Array.from({ length: 4 }, (_, index) => {
+        const item = Array.isArray(part.introSequence) ? part.introSequence[index] || {} : {};
+        const backup = basePack.introSequence[index] || {};
+        return {
+          speaker: coerceText(item.speaker, backup.speaker || "旁白"),
+          text: coerceText(item.text, backup.text || "这家店正在准备开张。"),
+        };
+      }),
+    };
+  }
+
+  if (sectionName === "core-chains") {
+    const chainIds = ["botanical", "alchemy", "curio"];
+    return {
+      chains: coerceObjectListById(part.chains, basePack.chains.filter((chain) => chainIds.includes(chain.id)), chainIds).map((chain) => {
+        const backup = getChainById(basePack, chain.id) || {};
+        const sourceItems = Array.isArray(chain.items) ? chain.items : [];
+        return {
+          id: chain.id,
+          label: coerceText(chain.label, backup.label || chain.id),
+          items: Array.from({ length: 6 }, (_, index) => {
+            const item = sourceItems[index] || {};
+            const fallbackItem = normalizeContentItem(backup.items?.[index], `${backup.label || chain.id}${index + 1}`);
+            return {
+              name: coerceText(item.name, fallbackItem.name),
+              description: coerceText(item.description, fallbackItem.description || "适合继续合成的店铺货品。"),
+            };
+          }),
+        };
+      }),
+    };
+  }
+
+  const chainIds = ["waste", "secret"];
+  const recipes = Array.isArray(part.recipes) ? part.recipes : [];
+  return {
+    chains: coerceObjectListById(part.chains, basePack.chains.filter((chain) => chainIds.includes(chain.id)), chainIds).map((chain) => {
+      const backup = getChainById(basePack, chain.id) || {};
+      const itemCount = chain.id === "secret" ? 8 : 6;
+      const sourceItems = Array.isArray(chain.items) ? chain.items : [];
+      return {
+        id: chain.id,
+        label: coerceText(chain.label, backup.label || chain.id),
+        items: Array.from({ length: itemCount }, (_, index) => {
+          const item = sourceItems[index] || {};
+          const fallbackItem = normalizeContentItem(backup.items?.[index], `${backup.label || chain.id}${index + 1}`);
+          return {
+            name: coerceText(item.name, fallbackItem.name),
+            description: coerceText(item.description, fallbackItem.description || "来自特殊组合的店铺货品。"),
+          };
+        }),
+      };
+    }),
+    recipes: [
+      { ingredients: ["botanical-2", "alchemy-2"], resultItemId: "secret-1" },
+      { ingredients: ["botanical-3", "curio-3"], resultItemId: "secret-2" },
+      { ingredients: ["alchemy-4", "curio-4"], resultItemId: "secret-4" },
+    ].map((backup, index) => {
+      const item = recipes[index] || {};
+      return {
+        ingredients: backup.ingredients,
+        resultItemId: backup.resultItemId,
+        title: coerceText(item.title, basePack.recipes[index]?.title || "秘方命中"),
+        body: coerceText(item.body, basePack.recipes[index]?.body || "这次组合开出了稀有货品。"),
+      };
+    }),
+  };
+}
+
 class StaticLLMAdapter {
   describe() {
     return "Static Local LLM";
@@ -420,11 +572,11 @@ class StaticLLMAdapter {
       assistantSummary:
         "这位店员助手会先负责盯订单、整理货源和解释规则，也负责在店铺搭建时陪玩家对话，消化等待。",
       loopSummary:
-        "当前本地版先沿用已有的 merge + 订单骨架，把你输入的店铺主题映射到店名、叙事动机、助手身份和主题视觉上。",
+        "玩家会通过进货、合成和交付订单推进店铺经营，并在每天回店时看到新的进展。",
       confirmationLine:
-        `明白了，我们先把它做成「${shopName}」。我会一边替你盯施工，一边把第一批货线和柜台说明整理好。`,
+        `明白了，我们先把它做成「${shopName}」。我会一边替你守着柜台，一边把第一批货线和柜台说明整理好。`,
       readySummary:
-        `「${shopName}」已经搭好。现在可以直接进入店里，后续再把真实独立 LLM、生图和切图管线接进来。`,
+        `「${shopName}」已经搭好。现在可以进店整理第一批货，接下第一张委托。`,
       loadingPortraitUrl: `${ASSISTANT_ASSET_BASE}/serious.png`,
       runtimeConfig: {
         worldName,
@@ -446,13 +598,13 @@ class StaticLLMAdapter {
     if (lowered.includes("卖") || lowered.includes("客")) {
       text = `${concept.shopName}会优先服务${WORLD_NAME}里那些零散但急的小需求，所以第一批客人会更偏教学、巡夜和社团临时委托。`;
     } else if (lowered.includes("助手") || lowered.includes("你")) {
-      text = `我会先负责把订单、补给和当天提示串起来。等真实角色 LLM 接进来后，这里的对话就会从固定回复切到独立角色驱动。`;
+      text = "我会先负责看订单、记账、提醒补货，也会在你犹豫时给一点经营建议。";
     } else if (lowered.includes("多久") || lowered.includes("还要")) {
-      text = `这版本地 builder 只做一轮快速施工，所以会先完成设定锁定、助手资产挂载和运行配置写入，然后就能直接开张。`;
+      text = "先把店名、货源、柜台和第一批委托准备好，准备齐了就能直接开张。";
     } else if (lowered.includes("素材") || lowered.includes("图片")) {
-      text = "目前素材链路先挂接本地现成资产目录，后续再切到真实生图与切图链路。";
+      text = "我会先把第一批货物图样和店员形象整理到位，进店后就能直接看到。";
     } else {
-      text = `我先记下这点。现在施工停在「${job.currentStageLabel || "准备设定"}」，等配置写完，你进店后就能立刻验证这家店的节奏。`;
+      text = `我先记下这点。现在进度停在「${job.currentStageLabel || "准备设定"}」，齐备后你就能进店试营业。`;
     }
 
     return {
@@ -484,10 +636,17 @@ class NetaLLMAdapter {
     }
 
     const prompt = [
+      "You are writing an in-world game shop concept for the player.",
+      "Every returned string should read like player-facing content from inside the shop world.",
+      "The assistant should be a believable shop-world character or helper with a concrete role, personality, and reason to be present.",
+      "Use practical shop language: merchandise, supply, customers, daily work, opening preparation, and first orders.",
+      "Output valid compact JSON only. Every key and string must use normal double quotes.",
       builderPrompts.concept,
       `World: ${input.worldName}`,
       `User shop idea: ${input.shopIdea}`,
-      "Return compact JSON with keys: shopName, summary, assistantName, assistantRole, assistantSummary, loopSummary, confirmationLine, readySummary.",
+      "Also return a theme object for the playable shop screen. Use only hex colors except shopLightSoft, which may be rgba().",
+      "Theme keys: bgTop, bgBottom, paper, paperSoft, gold, shopBgTop, shopBgMid, shopBgBottom, shopLight, shopLightSoft, shopPanel, shopPanel2, shopPaper, shopPaperSoft, shopCard, shopCardDark, shopBorder, shopBorderDark, shopGold, shopGoldSoft, shopGreen, shopRed, shopText, shopInk, shopMuted.",
+      "Return compact JSON with keys: shopName, summary, assistantName, assistantRole, assistantSummary, loopSummary, confirmationLine, readySummary, theme.",
     ].join("\n\n");
 
     try {
@@ -501,24 +660,25 @@ class NetaLLMAdapter {
         throw new Error("LLM returned non-JSON concept payload");
       }
 
-      const theme = pickTheme(parsed.shopName || input.shopIdea);
+      const cleaned = sanitizeConceptPayload(parsed, input);
+      const theme = mergeThemeTokens(pickTheme(`${cleaned.shopName || ""} ${input.shopIdea || ""}`), cleaned.theme);
       return {
         worldName: input.worldName,
         shopIdea: sanitizeShopIdea(input.shopIdea),
-        shopName: parsed.shopName || buildShopName(input.shopIdea),
-        assistantName: parsed.assistantName || "店员助手",
-        assistantRole: parsed.assistantRole || "店长助手",
-        assistantSummary: parsed.assistantSummary || "这位助手会先承担建店阶段的陪伴与解释工作。",
-        summary: parsed.summary || `${input.shopIdea}会被映射成当前经营骨架里的第一家主题店。`,
-        loopSummary: parsed.loopSummary || "当前本地版会先沿用现有 merge + 订单骨架。",
-        confirmationLine: parsed.confirmationLine || `先把「${parsed.shopName || buildShopName(input.shopIdea)}」搭起来。`,
-        readySummary: parsed.readySummary || "店铺已经准备好，可以开始经营。",
+        shopName: cleaned.shopName,
+        assistantName: cleaned.assistantName,
+        assistantRole: cleaned.assistantRole || "店长助手",
+        assistantSummary: cleaned.assistantSummary || "这位助手会先承担建店阶段的陪伴与解释工作。",
+        summary: cleaned.summary || `${input.shopIdea}会成为这座世界里第一家围绕日常需求开张的主题店。`,
+        loopSummary: cleaned.loopSummary || "玩家会通过进货、合成和交付订单推进店铺经营。",
+        confirmationLine: cleaned.confirmationLine || `先把「${cleaned.shopName}」搭起来。`,
+        readySummary: cleaned.readySummary || "店铺已经准备好，可以开始经营。",
         loadingPortraitUrl: `${ASSISTANT_ASSET_BASE}/serious.png`,
         runtimeConfig: {
           worldName: input.worldName,
-          shopName: parsed.shopName || buildShopName(input.shopIdea),
+          shopName: cleaned.shopName,
           brandEyebrow: `${input.worldName} · ${theme.eyebrow}`,
-          assistantName: parsed.assistantName || "店员助手",
+          assistantName: cleaned.assistantName,
           assistantRole: "店员助手",
           assistantPortraits: buildAssistantPortraits(),
           tileAssetBase: TILE_ASSET_BASE,
@@ -543,7 +703,7 @@ class NetaLLMAdapter {
       "You are an in-world shop assistant talking during shop construction.",
       `Shop: ${input.concept.shopName}`,
       `User message: ${input.message}`,
-      "Answer in concise simplified Chinese.",
+      "Answer in concise simplified Chinese as a shop-world character.",
     ].join("\n\n");
     try {
       const text = await this.complete(prompt, context);
@@ -566,6 +726,23 @@ class NetaLLMAdapter {
     const concept = input?.concept || {};
     const basePack = buildStaticContentPack(concept);
     const sectionTimeoutMs = Math.min(CONTENT_PACK_LLM_TIMEOUT_MS, CONTENT_PACK_SECTION_TIMEOUT_MS);
+    const parseSection = async ({ sectionName, text, shapeHint, maxTokens }) => {
+      try {
+        const parsed = await parseOrRepairModelJson({
+          llm: this,
+          text,
+          sectionName,
+          shapeHint,
+          context,
+          timeoutMs: sectionTimeoutMs,
+          maxTokens,
+        });
+        return coerceContentPackPart(sectionName, sanitizeModelStrings(parsed), basePack);
+      } catch (error) {
+        llmWarn(`[neta-llm] content pack section ${sectionName} JSON repair failed, using coerced fallback: ${error.message}`);
+        return coerceContentPackPart(sectionName, null, basePack);
+      }
+    };
 
     try {
       const metaText = await this.complete(buildMetaContentPackPrompt(input, concept), {
@@ -577,10 +754,12 @@ class NetaLLMAdapter {
       }).catch((error) => {
         throw new Error(`Content pack section meta failed: ${error.message}`);
       });
-      const metaPart = parseModelJson(metaText);
-      if (!metaPart) {
-        throw new Error("Content pack section meta returned non-JSON payload");
-      }
+      const metaPart = await parseSection({
+        sectionName: "meta",
+        text: metaText,
+        shapeHint: "{sources:[{id,name,shortLabel,blurb}],clients:[{name,role,requestFlavor}],blessings:[{id,title,description,tags}],introSequence:[{speaker,text}]}",
+        maxTokens: 750,
+      });
 
       const coreText = await this.complete(buildCoreChainsPrompt(input, concept), {
         ...context,
@@ -591,10 +770,12 @@ class NetaLLMAdapter {
       }).catch((error) => {
         throw new Error(`Content pack section core-chains failed: ${error.message}`);
       });
-      const corePart = parseModelJson(coreText);
-      if (!corePart) {
-        throw new Error("Content pack section core-chains returned non-JSON payload");
-      }
+      const corePart = await parseSection({
+        sectionName: "core-chains",
+        text: coreText,
+        shapeHint: "{chains:[{id,label,items:[{name,description}]}]}",
+        maxTokens: 950,
+      });
 
       const specialText = await this.complete(buildSpecialChainsPrompt(input, concept), {
         ...context,
@@ -605,10 +786,12 @@ class NetaLLMAdapter {
       }).catch((error) => {
         throw new Error(`Content pack section special-chains failed: ${error.message}`);
       });
-      const specialPart = parseModelJson(specialText);
-      if (!specialPart) {
-        throw new Error("Content pack section special-chains returned non-JSON payload");
-      }
+      const specialPart = await parseSection({
+        sectionName: "special-chains",
+        text: specialText,
+        shapeHint: "{chains:[{id,label,items:[{name,description}]}],recipes:[{ingredients,resultItemId,title,body}]}",
+        maxTokens: 950,
+      });
 
       return mergeGeneratedContentPack(basePack, metaPart, corePart, specialPart);
     } catch (error) {
@@ -793,8 +976,227 @@ function buildShopName(shopIdea) {
   return `${cleaned.slice(0, 8)}杂货店`;
 }
 
+const THEME_TOKEN_KEYS = [
+  "bgTop",
+  "bgBottom",
+  "paper",
+  "paperSoft",
+  "gold",
+  "shopBgTop",
+  "shopBgMid",
+  "shopBgBottom",
+  "shopLight",
+  "shopLightSoft",
+  "shopPanel",
+  "shopPanel2",
+  "shopPaper",
+  "shopPaperSoft",
+  "shopCard",
+  "shopCardDark",
+  "shopBorder",
+  "shopBorderDark",
+  "shopGold",
+  "shopGoldSoft",
+  "shopGreen",
+  "shopRed",
+  "shopText",
+  "shopInk",
+  "shopMuted",
+];
+
+function isSafeThemeColor(value) {
+  const normalized = String(value || "").trim();
+  if (/^#[0-9a-fA-F]{6}$/.test(normalized)) return true;
+  return /^rgba?\(\s*(?:\d{1,3}\s*,\s*){2}\d{1,3}\s*(?:,\s*(?:0|1|0?\.\d+))?\s*\)$/.test(normalized);
+}
+
+function mergeThemeTokens(baseTheme, generatedTheme = {}) {
+  const baseTokens = baseTheme?.tokens || {};
+  const source = generatedTheme && typeof generatedTheme === "object" ? generatedTheme : {};
+  const tokens = { ...baseTokens };
+  for (const key of THEME_TOKEN_KEYS) {
+    if (isSafeThemeColor(source[key])) {
+      tokens[key] = String(source[key]).trim();
+    }
+  }
+
+  tokens.bgTop ||= tokens.shopBgTop;
+  tokens.bgBottom ||= tokens.shopBgBottom;
+  tokens.paper ||= tokens.shopPaper;
+  tokens.paperSoft ||= tokens.shopPaperSoft;
+  tokens.gold ||= tokens.shopGold;
+
+  return {
+    eyebrow: coerceText(source.eyebrow, baseTheme?.eyebrow || "主题店铺"),
+    tokens,
+  };
+}
+
 function pickTheme(input) {
   const value = input.toLowerCase();
+  const defaultTokens = {
+    bgTop: "#faefc9",
+    bgBottom: "#d7b57c",
+    paper: "#fff7e7",
+    paperSoft: "#f5ead0",
+    gold: "#c78e2a",
+    shopBgTop: "#faefc9",
+    shopBgMid: "#f5dfa1",
+    shopBgBottom: "#d0ab71",
+    shopLight: "#f6d88f",
+    shopLightSoft: "rgba(246, 216, 143, 0.24)",
+    shopPanel: "#fff7e7",
+    shopPanel2: "#f5ead0",
+    shopPaper: "#fff7e7",
+    shopPaperSoft: "#f5ead0",
+    shopCard: "#fffaf0",
+    shopCardDark: "#ead2a8",
+    shopBorder: "#8a6947",
+    shopBorderDark: "#4b3829",
+    shopGold: "#c78e2a",
+    shopGoldSoft: "#e0bd72",
+    shopGreen: "#6c8f4d",
+    shopRed: "#b35b45",
+    shopText: "#4a3728",
+    shopInk: "#3a2414",
+    shopMuted: "#7f6a4d",
+  };
+  const hotpotTokens = {
+    bgTop: "#3f0f0d",
+    bgBottom: "#b43a22",
+    paper: "#fff0d6",
+    paperSoft: "#ffd59a",
+    gold: "#f0b84a",
+    shopBgTop: "#3f0f0d",
+    shopBgMid: "#7b1f18",
+    shopBgBottom: "#b43a22",
+    shopLight: "#ffcf75",
+    shopLightSoft: "rgba(255, 207, 117, 0.24)",
+    shopPanel: "#681b14",
+    shopPanel2: "#8f2a1d",
+    shopPaper: "#fff0d6",
+    shopPaperSoft: "#ffd59a",
+    shopCard: "#fff5df",
+    shopCardDark: "#b84b2a",
+    shopBorder: "#d68636",
+    shopBorderDark: "#46110c",
+    shopGold: "#f0b84a",
+    shopGoldSoft: "#ffd77a",
+    shopGreen: "#6c8d45",
+    shopRed: "#c93b2f",
+    shopText: "#fff0d6",
+    shopInk: "#41110d",
+    shopMuted: "#ffd59a",
+  };
+  const ollivandersTokens = {
+    bgTop: "#120b07",
+    bgBottom: "#3b2415",
+    paper: "#e7cf9b",
+    paperSoft: "#d3b47a",
+    gold: "#d8a642",
+    shopBgTop: "#120b07",
+    shopBgMid: "#24150d",
+    shopBgBottom: "#3b2415",
+    shopLight: "#f2c776",
+    shopLightSoft: "rgba(242, 199, 118, 0.22)",
+    shopPanel: "#2a190f",
+    shopPanel2: "#3a2315",
+    shopPaper: "#e7cf9b",
+    shopPaperSoft: "#d3b47a",
+    shopCard: "#ead7aa",
+    shopCardDark: "#4b2d19",
+    shopBorder: "#7a4a24",
+    shopBorderDark: "#1b100a",
+    shopGold: "#d8a642",
+    shopGoldSoft: "#f0cf7a",
+    shopGreen: "#556f46",
+    shopRed: "#8d3c2f",
+    shopText: "#f3e0b5",
+    shopInk: "#3a2414",
+    shopMuted: "#b89964",
+  };
+  const teslaTokens = {
+    bgTop: "#0b1118",
+    bgBottom: "#1f2937",
+    paper: "#e8eef5",
+    paperSoft: "#c9d5e2",
+    gold: "#e23a3a",
+    shopBgTop: "#090f16",
+    shopBgMid: "#111c29",
+    shopBgBottom: "#263241",
+    shopLight: "#dce8f6",
+    shopLightSoft: "rgba(220, 232, 246, 0.18)",
+    shopPanel: "#111c29",
+    shopPanel2: "#1b2938",
+    shopPaper: "#e8eef5",
+    shopPaperSoft: "#c9d5e2",
+    shopCard: "#f4f7fb",
+    shopCardDark: "#324256",
+    shopBorder: "#617186",
+    shopBorderDark: "#05080c",
+    shopGold: "#e23a3a",
+    shopGoldSoft: "#ff7474",
+    shopGreen: "#46c6a8",
+    shopRed: "#d42f2f",
+    shopText: "#edf4fb",
+    shopInk: "#111827",
+    shopMuted: "#9fb0c2",
+  };
+  const noodleTokens = {
+    bgTop: "#3b170b",
+    bgBottom: "#a64519",
+    paper: "#fff0d0",
+    paperSoft: "#f4c982",
+    gold: "#e6a43a",
+    shopBgTop: "#2a0f07",
+    shopBgMid: "#6d2b12",
+    shopBgBottom: "#a64519",
+    shopLight: "#ffd27b",
+    shopLightSoft: "rgba(255, 210, 123, 0.24)",
+    shopPanel: "#5b230f",
+    shopPanel2: "#783217",
+    shopPaper: "#fff0d0",
+    shopPaperSoft: "#f4c982",
+    shopCard: "#fff6de",
+    shopCardDark: "#a35123",
+    shopBorder: "#c17834",
+    shopBorderDark: "#2c0d05",
+    shopGold: "#e6a43a",
+    shopGoldSoft: "#ffd06d",
+    shopGreen: "#5e8c49",
+    shopRed: "#b83a1d",
+    shopText: "#fff1d4",
+    shopInk: "#361307",
+    shopMuted: "#e5bd7d",
+  };
+  if (value.includes("tesla") || value.includes("特斯拉") || value.includes("电车") || value.includes("新能源")) {
+    return {
+      eyebrow: "未来车库",
+      tokens: teslaTokens,
+    };
+  }
+
+  if (value.includes("陈香贵") || value.includes("拉面") || value.includes("牛肉面") || value.includes("面馆")) {
+    return {
+      eyebrow: "热汤面台",
+      tokens: noodleTokens,
+    };
+  }
+
+  if (value.includes("火锅") || value.includes("海底捞") || value.includes("hotpot") || value.includes("锅")) {
+    return {
+      eyebrow: "热汤灶台",
+      tokens: hotpotTokens,
+    };
+  }
+
+  if (value.includes("魔杖") || value.includes("wand") || value.includes("奥利凡德") || value.includes("ollivander")) {
+    return {
+      eyebrow: "魔杖匣柜",
+      tokens: ollivandersTokens,
+    };
+  }
+
   if (value.includes("月") || value.includes("夜") || value.includes("星")) {
     return {
       eyebrow: "夜间调度",
@@ -823,13 +1225,7 @@ function pickTheme(input) {
 
   return {
     eyebrow: "资源中转",
-    tokens: {
-      bgTop: "#faefc9",
-      bgBottom: "#d7b57c",
-      paper: "#fff7e7",
-      paperSoft: "#f5ead0",
-      gold: "#c78e2a",
-    },
+    tokens: defaultTokens,
   };
 }
 
@@ -857,11 +1253,53 @@ function normalizeJsonLikeText(input = "") {
     .replace(/［/g, "[")
     .replace(/］/g, "]")
     .replace(/([,{]\s*)"([A-Za-z0-9_]+):"(?=\S)/g, '$1"$2":"')
+    .replace(/([}\]])\s*,\s*\{\s*("(?:sources|clients|blessings|introSequence|chains|recipes)"\s*:)/g, "$1,$2")
+    .replace(/("[A-Za-z0-9_]+"\s*:\s*)(?=[,}\]])/g, '$1""')
     .replace(/("([A-Za-z0-9_]+)"\s*:\s*)([^"{\[\]\d\-tfn][^"]*)"(?!\s*:)(?=\s*[,}\]])/g, '$1"$3"')
     .replace(/("tags"\s*:\s*\[(?:\s*"[^"]*"\s*(?:,\s*"[^"]*"\s*)*)?)\}(?=\s*[,}\]])/g, "$1]}")
     .replace(/("ingredients"\s*:\s*\[(?:\s*"[^"]*"\s*(?:,\s*"[^"]*"\s*)*)?)\}(?=\s*[,}\]])/g, "$1]}")
     .replace(/([}\]])\s*("([A-Za-z0-9_]+)"\s*:)/g, "$1,$2")
     .replace(/,\s*([}\]])/g, "$1");
+}
+
+function extractBalancedJsonObjects(input = "") {
+  const text = String(input || "");
+  const objects = [];
+  let start = -1;
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index];
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (char === "\\") {
+        escaped = true;
+      } else if (char === '"') {
+        inString = false;
+      }
+      continue;
+    }
+    if (char === '"') {
+      inString = true;
+      continue;
+    }
+    if (char === "{") {
+      if (depth === 0) start = index;
+      depth += 1;
+      continue;
+    }
+    if (char === "}" && depth > 0) {
+      depth -= 1;
+      if (depth === 0 && start >= 0) {
+        objects.push(text.slice(start, index + 1));
+        start = -1;
+      }
+    }
+  }
+  return objects;
 }
 
 function parseModelJson(input = "") {
@@ -885,10 +1323,72 @@ function parseModelJson(input = "") {
     const candidate = input.slice(firstBrace, lastBrace + 1);
     const parsedCandidate = safeJsonParse(candidate);
     if (parsedCandidate) return parsedCandidate;
-    return safeJsonParse(normalizeJsonLikeText(candidate));
+    const normalizedCandidate = safeJsonParse(normalizeJsonLikeText(candidate));
+    if (normalizedCandidate) return normalizedCandidate;
+  }
+
+  for (const objectText of extractBalancedJsonObjects(input)) {
+    const parsedObject = safeJsonParse(objectText) || safeJsonParse(normalizeJsonLikeText(objectText));
+    if (parsedObject) return parsedObject;
   }
 
   return null;
+}
+
+async function parseOrRepairModelJson({ llm, text, sectionName, shapeHint, context, timeoutMs, maxTokens = 900 }) {
+  const parsed = parseModelJson(text);
+  if (parsed) return parsed;
+
+  const repairPrompt = [
+    "Convert the following text into valid minified JSON only.",
+    "Output only the JSON object requested by the required shape.",
+    "Preserve all useful Chinese strings from the source when possible.",
+    `Section: ${sectionName}`,
+    `Required shape: ${shapeHint}`,
+    "Broken output:",
+    String(text || "").slice(0, 6000),
+  ].join("\n\n");
+
+  const repairedText = await llm.complete(repairPrompt, {
+    ...context,
+    model: CONTENT_PACK_LLM_MODEL,
+    temperature: 0,
+    maxTokens,
+    timeoutMs,
+  });
+  return parseModelJson(repairedText);
+}
+
+function stripMetaAiText(value) {
+  if (typeof value !== "string") return value;
+  return value
+    .replace(/\s*[（(]\s*(?:AI|ai)\s*(?:版|驱动|生成)?\s*[）)]\s*/g, "")
+    .replace(/(?:由\s*)?AI\s*(?:驱动的|生成的|扮演的|负责|提供的)?/gi, "")
+    .replace(/人工智能\s*(?:驱动的|生成的|扮演的)?/g, "")
+    .replace(/\bweb\b/gi, "")
+    .replace(/\bMVP\b/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function sanitizeModelStrings(value) {
+  if (Array.isArray(value)) return value.map((item) => sanitizeModelStrings(item));
+  if (!value || typeof value !== "object") return stripMetaAiText(value);
+  return Object.fromEntries(
+    Object.entries(value).map(([key, item]) => [key, sanitizeModelStrings(item)]),
+  );
+}
+
+function sanitizeConceptPayload(parsed = {}, input = {}) {
+  const cleaned = sanitizeModelStrings(parsed || {});
+  const fallbackShopName = buildShopName(input.shopIdea);
+  const shopName = stripMetaAiText(cleaned.shopName) || fallbackShopName;
+  const assistantName = stripMetaAiText(cleaned.assistantName) || "店员助手";
+  return {
+    ...cleaned,
+    shopName,
+    assistantName,
+  };
 }
 
 function extractMessageText(payload) {
@@ -1087,6 +1587,41 @@ async function loadSession() {
   }
 }
 
+async function backupBeforeReset() {
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const backupDir = path.join(RESET_BACKUPS_DIR, stamp);
+  let copied = false;
+  await mkdir(backupDir, { recursive: true });
+
+  try {
+    await cp(SESSION_FILE, path.join(backupDir, "current-session.json"));
+    copied = true;
+  } catch {
+    // No session to preserve.
+  }
+
+  try {
+    await cp(BUILD_ARTIFACTS_DIR, path.join(backupDir, "build-artifacts"), {
+      recursive: true,
+      force: true,
+    });
+    copied = true;
+  } catch {
+    // No build artifacts to preserve.
+  }
+
+  if (!copied) {
+    try {
+      await rm(backupDir, { recursive: true, force: true });
+    } catch {
+      // ignore cleanup failure
+    }
+    return null;
+  }
+
+  return backupDir;
+}
+
 async function wait(ms) {
   await new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -1256,9 +1791,35 @@ function buildAgentHandshakePayload(job) {
             kind: "json",
             required: true,
           },
+          {
+            id: "shop_decor_stickers_2x3",
+            path: path.join(artifactDir, "shop_decor_stickers_2x3.png"),
+            kind: "image",
+            required: true,
+          },
+          {
+            id: "shop_decor_manifest",
+            path: path.join(artifactDir, "shop_decorations", "manifest.json"),
+            kind: "json",
+            required: true,
+          },
+          {
+            id: "ui_button_stickers_1x5",
+            path: path.join(artifactDir, "ui_button_stickers_1x5.png"),
+            kind: "image",
+            required: true,
+          },
+          {
+            id: "ui_button_manifest",
+            path: path.join(artifactDir, "ui_buttons", "manifest.json"),
+            kind: "json",
+            required: true,
+          },
         ],
         tileOutputDir: path.join(artifactDir, "tiles"),
         portraitOutputDir: path.join(artifactDir, "assistant_portraits"),
+        decorOutputDir: path.join(artifactDir, "shop_decorations"),
+        uiButtonOutputDir: path.join(artifactDir, "ui_buttons"),
         requiredTileCount: tileRows * tileCols,
       },
     },
@@ -1336,13 +1897,13 @@ class LocalCodexAgentProvider {
     await ensureLocalAgentJob(job, handshakePayload);
     emitStage(
       job,
-      "载入 Builder 档案",
-      `已载入 ${builderProfile.name}，当前使用 ${builderProfile.id} 处理建店任务。`,
+      "核对开张清单",
+      "已经确认本轮开张所需的店铺方案、货物图样、店员肖像和装饰贴纸。",
     );
     emitStage(
       job,
-      "等待本地 Agent 接管",
-      "本地建店任务已写入队列。当前 provider 不再自动完工，等待本地 Codex worker 认领任务、回传施工事件并提交最终结果。",
+      "等待开店信回执",
+      "开店信已经送出，等回执到了就开始布置柜台。",
       "running",
     );
   }
@@ -1375,8 +1936,8 @@ class RemoteAgentProvider {
 
     emitStage(
       job,
-      "握手远程 Agent",
-      `正在连接远程建店代理 ${this.baseUrl}，后续线上环境只需要切换 provider，不需要改前端建店流。`,
+      "连接远方回执",
+      "正在等远方回信。回信一到，就开始布置柜台。",
       "running",
     );
 
@@ -1630,8 +2191,8 @@ const server = createServer(async (request, response) => {
       if (job) {
         emitStage(
           job,
-          "本地 Agent 已认领",
-          `${status.claimedBy} 已认领这轮建店任务，后续施工事件将由本地 worker 持续回传。`,
+          "开店信已接下",
+          "有人接下这封开店信了，柜台准备要动起来了。",
           "running",
         );
       }
@@ -1725,7 +2286,7 @@ const server = createServer(async (request, response) => {
         state: "blocked",
         blockedAt: new Date().toISOString(),
         missingArtifacts: Array.isArray(body.missingArtifacts) ? body.missingArtifacts : [],
-        blockReason: body.reason || "Missing required build artifacts",
+        blockReason: body.reason || "还缺开张要用的东西",
         artifactDir: body.artifactDir || null,
       });
       if (job) {
@@ -1739,7 +2300,7 @@ const server = createServer(async (request, response) => {
           claimedBy: status.claimedBy || null,
           artifactDir: status.artifactDir || null,
           missingArtifacts: status.missingArtifacts || [],
-          reason: status.blockReason || "Missing required build artifacts",
+          reason: status.blockReason || "还缺开张要用的东西",
         }));
       }
       sendJson(response, 200, { ok: true, status });
@@ -1781,14 +2342,14 @@ const server = createServer(async (request, response) => {
       const status = await updateLocalAgentStatus(jobId, {
         state: "failed",
         failedAt: new Date().toISOString(),
-        error: body.error || "Unknown local worker failure",
+        error: body.error || "开张准备卡住了",
       });
       if (job) {
         emitFailed(job, status.error);
         appLog("ERROR", "[agent] fail-summary", summarizeAgentExecution(job, null, {
           status: "failed",
           claimedBy: status.claimedBy || null,
-          error: status.error || "Unknown local worker failure",
+          error: status.error || "开张准备卡住了",
         }));
       }
       sendJson(response, 200, { ok: true, status });
@@ -1887,7 +2448,7 @@ const server = createServer(async (request, response) => {
         message: body.message || "",
         job: job || {
           currentStageLabel:
-            session?.status === "ready" ? "可开张" : session?.status || "等待施工",
+            session?.status === "ready" ? "可开张" : session?.status || "等待开店信回执",
         },
       }, {
         accessToken,
@@ -1911,6 +2472,7 @@ const server = createServer(async (request, response) => {
     }
 
     if (request.method === "POST" && url.pathname === "/api/session/reset") {
+      const backupDir = await backupBeforeReset();
       try {
         await rm(SESSION_FILE);
       } catch {
@@ -1929,12 +2491,15 @@ const server = createServer(async (request, response) => {
       await mkdir(LOCAL_AGENT_JOBS_DIR, { recursive: true });
       await mkdir(BUILD_ARTIFACTS_DIR, { recursive: true });
       jobs.clear();
-      sendJson(response, 200, { ok: true });
+      sendJson(response, 200, {
+        ok: true,
+        backupDir: backupDir ? path.relative(PROJECT_ROOT, backupDir) : null,
+      });
       return;
     }
 
     const staticPath =
-      url.pathname === "/"
+      url.pathname === "/" || url.pathname === "/fresh"
         ? path.join(PROJECT_ROOT, "index.html")
         : url.pathname.startsWith("/Downloads/")
           ? resolveUnder("/Users/yves", url.pathname)

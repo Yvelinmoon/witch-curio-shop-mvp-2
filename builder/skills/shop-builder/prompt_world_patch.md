@@ -7,6 +7,6 @@ You may change:
 - theme color tokens
 - intro / loading copy
 
-Do not change:
+Keep unchanged:
 - core merge board rules
 - existing save format beyond additive metadata

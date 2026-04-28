@@ -13,6 +13,88 @@ const DEFAULT_WORLD_NAME = "你的世界";
 const DEFAULT_ASSISTANT_NAME = "店员助手";
 const TILE_ASSET_BASE = "/Downloads/magic_assets_tiles_4x8_trimmed";
 const HERMIONE_ASSET_BASE = "/Downloads/hermione_emotions_tiles_1x4_trimmed";
+const DEFAULT_SHOP_THEME = {
+  bgTop: "#faefc9",
+  bgBottom: "#d7b57c",
+  paper: "#fff7e7",
+  paperSoft: "#f5ead0",
+  gold: "#c78e2a",
+  shopBgTop: "#faefc9",
+  shopBgMid: "#f5dfa1",
+  shopBgBottom: "#d0ab71",
+  shopLight: "#f6d88f",
+  shopLightSoft: "rgba(246, 216, 143, 0.24)",
+  shopPanel: "#fff7e7",
+  shopPanel2: "#f5ead0",
+  shopPaper: "#fff7e7",
+  shopPaperSoft: "#f5ead0",
+  shopCard: "#fffaf0",
+  shopCardDark: "#ead2a8",
+  shopBorder: "#8a6947",
+  shopBorderDark: "#4b3829",
+  shopGold: "#c78e2a",
+  shopGoldSoft: "#e0bd72",
+  shopGreen: "#6c8f4d",
+  shopRed: "#b35b45",
+  shopText: "#4a3728",
+  shopInk: "#3a2414",
+  shopMuted: "#7f6a4d",
+};
+const DECOR_STORAGE_KEY = `${STORAGE_KEY}:shop_decor_positions_v4`;
+const SHOP_DECORATION_STICKERS = [
+  {
+    id: "wand-rack",
+    url: "/generated/shop-stickers/ollivanders-decor/decor_01_wand-rack.png",
+    left: 5,
+    top: 68,
+    width: 192,
+  },
+  {
+    id: "wand-box-shelf",
+    url: "/generated/shop-stickers/ollivanders-decor/decor_02_wand-box-shelf.png",
+    left: 8,
+    top: 71,
+    width: 176,
+  },
+  {
+    id: "shop-counter",
+    url: "/generated/shop-stickers/ollivanders-decor/decor_03_shop-counter.png",
+    left: 11,
+    top: 74,
+    width: 192,
+  },
+  {
+    id: "wand-display-case",
+    url: "/generated/shop-stickers/ollivanders-decor/decor_04_wand-display-case.png",
+    left: 14,
+    top: 77,
+    width: 176,
+  },
+  {
+    id: "closed-door",
+    url: "/generated/shop-stickers/ollivanders-decor/decor_05_wood-floor.png",
+    left: 17,
+    top: 80,
+    width: 176,
+  },
+  {
+    id: "wood-floor",
+    url: "/generated/shop-stickers/ollivanders-decor/decor_06_closed-door.png",
+    left: 20,
+    top: 83,
+    width: 176,
+  },
+];
+
+const DEFAULT_UI_BUTTON_STICKERS = {
+  hall: "/generated/shop-stickers/hp-wood/sticker_15_platform-nine.png",
+  codex: "/generated/shop-stickers/hp-wood/sticker_08_spell-book.png",
+  shelf: "/generated/shop-stickers/hp-wood/sticker_10_hogwarts-crest.png",
+  reset: "/generated/shop-stickers/hp-wood/sticker_13_time-turner.png",
+  trash: "/generated/shop-stickers/hp-wood/sticker_06_cauldron.png",
+};
+
+const DECOR_DEFAULT_KEY = JSON.stringify(SHOP_DECORATION_STICKERS);
 
 window.__SHOP_SAVE_KEY__ = STORAGE_KEY;
 
@@ -43,13 +125,7 @@ function buildDefaultRuntimeConfig() {
     assistantRole: "店员助手",
     assistantPortraits: buildDefaultAssistantPortraits(),
     tileAssetBase: TILE_ASSET_BASE,
-    theme: {
-      bgTop: "#faefc9",
-      bgBottom: "#d7b57c",
-      paper: "#fff7e7",
-      paperSoft: "#f5ead0",
-      gold: "#c78e2a",
-    },
+    theme: DEFAULT_SHOP_THEME,
   };
 }
 
@@ -72,6 +148,13 @@ function mergeRuntimeConfig(nextConfig = {}) {
 let runtimeConfig = mergeRuntimeConfig(window.__SHOP_RUNTIME__ || {});
 let tileAssetUrls = buildTileAssetUrls(runtimeConfig.tileAssetBase);
 let tileBindingIndex = runtimeConfig.tileManifest?.bindings || {};
+let decorationStickers = SHOP_DECORATION_STICKERS;
+let uiButtonStickers = { ...DEFAULT_UI_BUTTON_STICKERS };
+let shopDecorationKey = "";
+let decorDragState = null;
+let decorResizeState = null;
+let activeTickerText = "";
+let tickerHideTimer = null;
 
 const DEFAULT_SOURCE_CONFIGS = [
   {
@@ -425,6 +508,31 @@ function applyThemeTokens() {
   if (theme.paper) root.style.setProperty("--paper", theme.paper);
   if (theme.paperSoft) root.style.setProperty("--paper-soft", theme.paperSoft);
   if (theme.gold) root.style.setProperty("--gold", theme.gold);
+  const shopTokenMap = {
+    shopBgTop: "--shop-bg-top",
+    shopBgMid: "--shop-bg-mid",
+    shopBgBottom: "--shop-bg-bottom",
+    shopLight: "--shop-light",
+    shopLightSoft: "--shop-light-soft",
+    shopPanel: "--shop-panel",
+    shopPanel2: "--shop-panel-2",
+    shopPaper: "--shop-paper",
+    shopPaperSoft: "--shop-paper-soft",
+    shopCard: "--shop-card",
+    shopCardDark: "--shop-card-dark",
+    shopBorder: "--shop-border",
+    shopBorderDark: "--shop-border-dark",
+    shopGold: "--shop-gold",
+    shopGoldSoft: "--shop-gold-soft",
+    shopGreen: "--shop-green",
+    shopRed: "--shop-red",
+    shopText: "--shop-text",
+    shopInk: "--shop-ink",
+    shopMuted: "--shop-muted",
+  };
+  Object.entries(shopTokenMap).forEach(([themeKey, cssVar]) => {
+    if (theme[themeKey]) root.style.setProperty(cssVar, theme[themeKey]);
+  });
 }
 
 function refreshItemAssetUrls() {
@@ -433,6 +541,80 @@ function refreshItemAssetUrls() {
     if (!itemIndex[itemId]) return;
     itemIndex[itemId].imageUrl = tileBindingIndex[itemId]?.url || tileAssetUrls[index];
   });
+}
+
+async function fetchJsonManifest(url) {
+  if (!url) return null;
+  const response = await fetch(url, { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(`Failed to load manifest ${url}: ${response.status}`);
+  }
+  return response.json();
+}
+
+function mapDecorationManifest(manifest) {
+  const stickers = Array.isArray(manifest?.stickers) ? manifest.stickers : [];
+  if (!stickers.length) return SHOP_DECORATION_STICKERS;
+  return stickers.slice(0, 6).map((sticker, index) => {
+    const fallback = SHOP_DECORATION_STICKERS[index] || SHOP_DECORATION_STICKERS[0];
+    return {
+      id: sticker.id || fallback.id,
+      url: sticker.url || fallback.url,
+      left: Number.isFinite(sticker.defaultLeft) ? sticker.defaultLeft : fallback.left,
+      top: Number.isFinite(sticker.defaultTop) ? sticker.defaultTop : fallback.top,
+      width: Number.isFinite(sticker.defaultWidth) ? sticker.defaultWidth : fallback.width,
+    };
+  });
+}
+
+function mapUiButtonManifest(manifest) {
+  const bindings = manifest?.bindings || {};
+  return {
+    ...DEFAULT_UI_BUTTON_STICKERS,
+    hall: bindings.hall?.url || DEFAULT_UI_BUTTON_STICKERS.hall,
+    codex: bindings.codex?.url || DEFAULT_UI_BUTTON_STICKERS.codex,
+    shelf: bindings.shelf?.url || DEFAULT_UI_BUTTON_STICKERS.shelf,
+    reset: bindings.reset?.url || DEFAULT_UI_BUTTON_STICKERS.reset,
+    trash: bindings.trash?.url || DEFAULT_UI_BUTTON_STICKERS.trash,
+  };
+}
+
+function applyUiButtonStickerUrls() {
+  document.querySelectorAll("[data-ui-sticker]").forEach((image) => {
+    const role = image.dataset.uiSticker;
+    const url = uiButtonStickers[role];
+    if (url && image.getAttribute("src") !== url) {
+      image.setAttribute("src", url);
+    }
+  });
+}
+
+function resetGeneratedStickerAssets() {
+  decorationStickers = SHOP_DECORATION_STICKERS;
+  uiButtonStickers = { ...DEFAULT_UI_BUTTON_STICKERS };
+  shopDecorationKey = "";
+  applyUiButtonStickerUrls();
+}
+
+async function loadRuntimeStickerAssets(config = runtimeConfig) {
+  resetGeneratedStickerAssets();
+  try {
+    const [decorationManifest, buttonManifest] = await Promise.all([
+      fetchJsonManifest(config.decorationManifestUrl),
+      fetchJsonManifest(config.uiButtonManifestUrl),
+    ]);
+    if (decorationManifest) {
+      decorationStickers = mapDecorationManifest(decorationManifest);
+      shopDecorationKey = "";
+    }
+    if (buttonManifest) {
+      uiButtonStickers = mapUiButtonManifest(buttonManifest);
+      applyUiButtonStickerUrls();
+    }
+    renderShopDecorations();
+  } catch (error) {
+    console.warn("Failed to load generated sticker assets", error);
+  }
 }
 
 function applyRuntimeConfig(nextConfig = {}) {
@@ -448,6 +630,7 @@ function applyRuntimeConfig(nextConfig = {}) {
   introSequence = contentPack.introSequence;
   rebuildCatalogFromContentPack();
   applyThemeTokens();
+  loadRuntimeStickerAssets(runtimeConfig);
   render();
 }
 
@@ -487,6 +670,7 @@ function logDragDebug(label, event, extra = {}) {
 
 const elements = {
   appShell: document.getElementById("appShell"),
+  shopDecorations: document.getElementById("shopDecorations"),
   brandEyebrow: document.getElementById("brandEyebrow"),
   brandTitle: document.getElementById("brandTitle"),
   goldValue: document.getElementById("goldValue"),
@@ -596,6 +780,9 @@ elements.openShelfButton.addEventListener("click", () => openLibrary("shelf"));
 elements.openCodexButton.addEventListener("click", () => openLibrary("codex"));
 elements.openHallButton.addEventListener("click", () => {
   showToast("大厅即将上线", "即将上线，敬请期待。");
+});
+elements.trashBin.addEventListener("click", () => {
+  showToast("垃圾桶", "把废料或多余材料拖到这里，就能腾出工作台空位。");
 });
 elements.closeLibraryButton.addEventListener("click", closeLibrary);
 
@@ -741,6 +928,7 @@ function resetShopState(nextRuntimeConfig = runtimeConfig, options = {}) {
   rebuildCatalogFromContentPack();
   refreshItemAssetUrls();
   applyThemeTokens();
+  loadRuntimeStickerAssets(runtimeConfig);
   state = createInitialState();
   if (options.introSeen === false) {
     state.introSeen = false;
@@ -765,6 +953,58 @@ function resetShopState(nextRuntimeConfig = runtimeConfig, options = {}) {
 
 window.resetShopState = resetShopState;
 
+window.exportShopArchive = () => {
+  const decorEntries = {};
+  try {
+    for (let index = 0; index < window.localStorage.length; index += 1) {
+      const key = window.localStorage.key(index);
+      if (key?.startsWith(`${STORAGE_KEY}:shop_decor_positions`)) {
+        decorEntries[key] = window.localStorage.getItem(key);
+      }
+    }
+  } catch (error) {
+    console.error("Failed to collect decor archive", error);
+  }
+  return {
+    version: 1,
+    archivedAt: new Date().toISOString(),
+    storageKey: STORAGE_KEY,
+    runtimeConfig,
+    savedState: window.localStorage.getItem(STORAGE_KEY),
+    decorEntries,
+  };
+};
+
+window.importShopArchive = (archive = {}) => {
+  if (!archive.savedState) {
+    throw new Error("Archive does not contain saved shop state");
+  }
+  runtimeConfig = mergeRuntimeConfig(archive.runtimeConfig || runtimeConfig);
+  contentPack = mergeContentPack(runtimeConfig.contentPack || {});
+  sourceConfigs = contentPack.sources;
+  clientProfiles = contentPack.clients;
+  itemChains = contentPack.chains;
+  mixedRecipeConfigs = contentPack.recipes;
+  dailyBlessings = contentPack.blessings;
+  introSequence = contentPack.introSequence;
+  tileAssetUrls = buildTileAssetUrls(runtimeConfig.tileAssetBase);
+  tileBindingIndex = runtimeConfig.tileManifest?.bindings || {};
+  rebuildCatalogFromContentPack();
+  refreshItemAssetUrls();
+  applyThemeTokens();
+  window.localStorage.setItem(STORAGE_KEY, archive.savedState);
+  Object.entries(archive.decorEntries || {}).forEach(([key, value]) => {
+    if (typeof value === "string") window.localStorage.setItem(key, value);
+  });
+  state = loadState() || createInitialState();
+  selectedCell = null;
+  activeDetailItemId = null;
+  libraryOpen = false;
+  assistantReaction = null;
+  loadRuntimeStickerAssets(runtimeConfig);
+  render();
+};
+
 function getLevel() {
   return Math.floor(state.xp / XP_PER_LEVEL) + 1;
 }
@@ -778,6 +1018,7 @@ function render() {
   elements.levelValue.textContent = String(getLevel());
   elements.discoveriesValue.textContent = `${getDiscoveryCount()} / ${itemOrder.length}`;
   elements.shelfCountValue.textContent = `${state.shelf.length} / ${MAX_SHELF_ITEMS}`;
+  renderShopDecorations();
   renderHeaderSummary();
   renderAssistant();
   renderPanelTabs();
@@ -793,8 +1034,182 @@ function render() {
   renderItemDetailOverlay();
 }
 
+function renderShopDecorations() {
+  if (!elements.shopDecorations) return;
+
+  const savedPositions = loadDecorPositions();
+  const nextKey = JSON.stringify({ stickers: decorationStickers, savedPositions });
+  if (nextKey === shopDecorationKey) return;
+  shopDecorationKey = nextKey;
+
+  elements.shopDecorations.innerHTML = decorationStickers
+    .map(
+      (sticker, index) => {
+        const position = savedPositions[sticker.id] || sticker;
+        return `
+        <button
+          class="shop-decor-sticker shop-decor-sticker-${index + 1}"
+          type="button"
+          data-decor-id="${sticker.id}"
+          style="--decor-left: ${position.left}%; --decor-top: ${position.top}%; --decor-width: ${position.width}px;"
+          aria-label="移动店铺装饰"
+        >
+          <img src="${sticker.url}" alt="" draggable="false" />
+          <span class="shop-decor-resize" data-decor-resize="true" aria-hidden="true"></span>
+        </button>
+      `;
+      },
+    )
+    .join("");
+
+  elements.shopDecorations.querySelectorAll("[data-decor-id]").forEach((button) => {
+    button.addEventListener("pointerdown", handleDecorPointerDown);
+  });
+}
+
+function clampNumber(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function getDecorMaxWidth() {
+  const boardRect = elements.board?.getBoundingClientRect();
+  const containerRect = elements.shopDecorations?.getBoundingClientRect();
+  const referenceWidth = boardRect?.width || containerRect?.width || 560;
+  return Math.max(140, Math.min(referenceWidth * 0.86, 520));
+}
+
+function loadDecorPositions() {
+  try {
+    const saved = JSON.parse(window.localStorage.getItem(DECOR_STORAGE_KEY) || "{}");
+    if (saved.defaultKey !== getDecorDefaultKey()) return {};
+    return saved.positions || {};
+  } catch {
+    return {};
+  }
+}
+
+function saveDecorPosition(decorId, nextPosition) {
+  const savedPositions = loadDecorPositions();
+  savedPositions[decorId] = nextPosition;
+  try {
+    window.localStorage.setItem(
+      DECOR_STORAGE_KEY,
+      JSON.stringify({ defaultKey: getDecorDefaultKey(), positions: savedPositions }),
+    );
+  } catch (error) {
+    console.error("Failed to save decor position", error);
+  }
+  shopDecorationKey = "";
+}
+
+function getDecorDefaultKey() {
+  return JSON.stringify(decorationStickers);
+}
+
+function handleDecorPointerDown(event) {
+  if (event.button !== undefined && event.button !== 0) return;
+  if (event.target.closest?.("[data-decor-resize]")) {
+    handleDecorResizePointerDown(event);
+    return;
+  }
+  const target = event.currentTarget;
+  const container = elements.shopDecorations;
+  const containerRect = container.getBoundingClientRect();
+  const targetRect = target.getBoundingClientRect();
+  decorDragState = {
+    id: target.dataset.decorId,
+    target,
+    containerRect,
+    offsetX: event.clientX - targetRect.left,
+    offsetY: event.clientY - targetRect.top,
+    widthPx: clampNumber(
+      targetRect.width || Number.parseFloat(target.style.getPropertyValue("--decor-width")) || 176,
+      72,
+      getDecorMaxWidth(),
+    ),
+  };
+  target.classList.add("dragging");
+  target.setPointerCapture?.(event.pointerId);
+  window.addEventListener("pointermove", handleDecorPointerMove);
+  window.addEventListener("pointerup", handleDecorPointerUp);
+  window.addEventListener("pointercancel", handleDecorPointerUp);
+}
+
+function handleDecorResizePointerDown(event) {
+  event.preventDefault();
+  event.stopPropagation();
+  const target = event.currentTarget;
+  const targetRect = target.getBoundingClientRect();
+  decorResizeState = {
+    id: target.dataset.decorId,
+    target,
+    startX: event.clientX,
+    startWidth: targetRect.width || Number.parseFloat(target.style.getPropertyValue("--decor-width")) || 176,
+    minWidth: 72,
+    maxWidth: getDecorMaxWidth(),
+  };
+  target.classList.add("resizing");
+  target.setPointerCapture?.(event.pointerId);
+  window.addEventListener("pointermove", handleDecorResizePointerMove);
+  window.addEventListener("pointerup", handleDecorResizePointerUp);
+  window.addEventListener("pointercancel", handleDecorResizePointerUp);
+}
+
+function handleDecorResizePointerMove(event) {
+  if (!decorResizeState) return;
+  const { target, startX, startWidth, minWidth, maxWidth } = decorResizeState;
+  const nextWidth = clampNumber(startWidth + (event.clientX - startX), minWidth, maxWidth);
+  target.style.setProperty("--decor-width", `${nextWidth}px`);
+}
+
+function handleDecorResizePointerUp() {
+  if (!decorResizeState) return;
+  const { id, target } = decorResizeState;
+  target.classList.remove("resizing");
+  saveDecorPosition(id, {
+    left: Number.parseFloat(target.style.getPropertyValue("--decor-left")) || 0,
+    top: Number.parseFloat(target.style.getPropertyValue("--decor-top")) || 0,
+    width: clampNumber(
+      Number.parseFloat(target.style.getPropertyValue("--decor-width")) || 176,
+      72,
+      getDecorMaxWidth(),
+    ),
+  });
+  decorResizeState = null;
+  window.removeEventListener("pointermove", handleDecorResizePointerMove);
+  window.removeEventListener("pointerup", handleDecorResizePointerUp);
+  window.removeEventListener("pointercancel", handleDecorResizePointerUp);
+}
+
+function handleDecorPointerMove(event) {
+  if (!decorDragState) return;
+  const { target, containerRect, offsetX, offsetY } = decorDragState;
+  const left = ((event.clientX - containerRect.left - offsetX) / containerRect.width) * 100;
+  const top = ((event.clientY - containerRect.top - offsetY) / containerRect.height) * 100;
+  const nextLeft = Math.max(-10, Math.min(92, left));
+  const nextTop = Math.max(-10, Math.min(92, top));
+  target.style.setProperty("--decor-left", `${nextLeft}%`);
+  target.style.setProperty("--decor-top", `${nextTop}%`);
+}
+
+function handleDecorPointerUp() {
+  if (!decorDragState) return;
+  const { id, target, widthPx } = decorDragState;
+  target.classList.remove("dragging");
+  saveDecorPosition(id, {
+    left: Number.parseFloat(target.style.getPropertyValue("--decor-left")) || 0,
+    top: Number.parseFloat(target.style.getPropertyValue("--decor-top")) || 0,
+    width: widthPx,
+  });
+  decorDragState = null;
+  window.removeEventListener("pointermove", handleDecorPointerMove);
+  window.removeEventListener("pointerup", handleDecorPointerUp);
+  window.removeEventListener("pointercancel", handleDecorPointerUp);
+}
+
 function setPanelTab(side, tab) {
   if (side === "left") {
+    if (tab === "events") return;
     activeLeftTab = tab;
   }
   renderPanelTabs();
@@ -927,13 +1342,31 @@ function renderHeaderSummary() {
   elements.brandEyebrow.textContent = runtimeConfig.brandEyebrow || runtimeConfig.worldName;
   elements.brandTitle.textContent = runtimeConfig.shopName;
   elements.brandRankLabel.textContent = getShopRankLabel();
-  elements.worldTicker.textContent = tickerText;
-  elements.worldTickerEcho.textContent = tickerText;
+  showTickerOnce(tickerText);
 
   elements.schoolStatusText.textContent = blessing.title;
   elements.schoolStatusDetail.textContent = latestEvent
     ? `${blessing.description} 最近一次触发的是「${latestEvent.title}」，继续推进还可能再出惊喜。`
     : blessing.description;
+}
+
+function showTickerOnce(tickerText) {
+  const ticker = elements.worldTicker?.closest(".board-ribbon-ticker");
+  if (!ticker || !tickerText || tickerText === activeTickerText) return;
+
+  activeTickerText = tickerText;
+  elements.worldTicker.textContent = tickerText;
+  elements.worldTickerEcho.textContent = "";
+  ticker.classList.remove("ticker-active");
+  void ticker.offsetWidth;
+  ticker.classList.add("ticker-active");
+
+  if (tickerHideTimer) {
+    clearTimeout(tickerHideTimer);
+  }
+  tickerHideTimer = window.setTimeout(() => {
+    ticker.classList.remove("ticker-active");
+  }, 6800);
 }
 
 function renderAssistant() {

@@ -104,11 +104,11 @@ function buildShopSheetPrompt(handshake) {
     `Shop summary: ${concept.summary || ""}`,
     `Loop summary: ${concept.loopSummary || ""}`,
     "Need a single coherent 4x8 sprite sheet for merge gameplay props.",
-    "Every tile slot must match the requested item exactly. Do not reorder, omit, merge, or substitute slots.",
-    "Slot notes are internal semantic guidance only. Never render these words as readable text.",
-    "Do not render any letters, Chinese characters, words, numbers, logos, signage, package copy, watermarks, badges, stamps, or labels anywhere in the image.",
+    "Every tile slot matches the requested item exactly, in the listed order, with one prop per slot.",
+    "Slot notes are semantic guidance for choosing shapes, colors, and materials.",
+    "All surfaces are blank and unbranded, with pictorial decoration only.",
     "If an item would normally include branding or printed packaging, replace it with blank unbranded surfaces and shape-only decoration.",
-    "Each tile must contain one centered isolated prop only, with no scene background and no extra UI elements.",
+    "Each tile contains one centered isolated prop only, on a clean background without extra interface elements.",
     "Leave generous pure white padding around every prop inside its own slot.",
     "Keep obvious empty whitespace between neighboring slots so no silhouette touches or crosses into another tile.",
     "Make every prop slightly smaller than the slot bounds to keep grid cutting safe.",
@@ -136,13 +136,13 @@ function buildSafeShopSheetPrompt(handshake) {
 
   return [
     "Generate a single sprite sheet for an original themed shop merge game.",
-    "Do not reference any existing franchise, trademark, copyrighted character, branded location, or protected product design.",
+    "Use original shop props, original silhouettes, blank labels, and unbranded designs.",
     "Need a single coherent 4x8 sprite sheet for merge gameplay props.",
-    "Every tile slot must match the requested itemId exactly. Do not reorder, omit, merge, or substitute slots.",
-    "Slot notes are internal semantic guidance only. Never render these words as readable text.",
-    "Do not render any letters, Chinese characters, words, numbers, logos, signage, package copy, watermarks, badges, stamps, or labels anywhere in the image.",
+    "Every tile slot matches the requested itemId exactly, in the listed order, with one prop per slot.",
+    "Slot notes are semantic guidance for choosing shapes, colors, and materials.",
+    "All surfaces are blank and unbranded, with pictorial decoration only.",
     "If an item would normally include branding or printed packaging, replace it with blank unbranded surfaces and shape-only decoration.",
-    "Each tile must contain one centered isolated prop only, with no scene background and no extra UI elements.",
+    "Each tile contains one centered isolated prop only, on a clean background without extra interface elements.",
     "Leave generous pure white padding around every prop inside its own slot.",
     "Keep obvious empty whitespace between neighboring slots so no silhouette touches or crosses into another tile.",
     "Make every prop slightly smaller than the slot bounds to keep grid cutting safe.",
@@ -170,7 +170,7 @@ function buildAssistantPrompt(handshake) {
     "Same character design in all four panels, solid pure white background only.",
     "Leave generous whitespace between the four panels so slicing never cuts into hair, hands, or shoulders.",
     "Keep each character centered and slightly smaller than the panel bounds.",
-    "Do not let any body part cross panel boundaries.",
+    "Every body part stays inside its own panel boundaries.",
   ]
     .filter(Boolean)
     .join("\n\n");
@@ -181,8 +181,8 @@ function buildSafeAssistantPrompt(handshake) {
   const roleText = normalizeText(concept.assistantRole) || "shop assistant";
   const summaryText = normalizeText(concept.assistantSummary) || "smart, reliable, warm helper";
   return [
-    "Design an original fantasy shop assistant character for a web game.",
-    "Do not reference any existing franchise, trademark, copyrighted character, school, or branded world.",
+    "Design an original fantasy shop assistant character for a shop game.",
+    "Use an original character design with original clothing, silhouette, and accessories.",
     `Role focus: ${roleText}`,
     `Personality summary: ${summaryText}`,
     "Young original assistant, clever expression, readable silhouette, game-friendly design.",
@@ -192,7 +192,65 @@ function buildSafeAssistantPrompt(handshake) {
     "Same character design in all four panels, solid pure white background only.",
     "Leave generous whitespace between the four panels so slicing never cuts into hair, hands, or shoulders.",
     "Keep each character centered and slightly smaller than the panel bounds.",
-    "Do not let any body part cross panel boundaries.",
+    "Every body part stays inside its own panel boundaries.",
+  ].join("\n\n");
+}
+
+function buildShopDecorStickerPrompt(handshake) {
+  const concept = handshake?.concept || {};
+  const prompt = handshake?.prompts?.shopDecorStickers || "";
+  return [
+    prompt,
+    `World: ${concept.worldName || "Unknown World"}`,
+    `Shop idea: ${concept.shopIdea || ""}`,
+    `Shop name: ${concept.shopName || ""}`,
+    `Shop summary: ${concept.summary || ""}`,
+    "Make the six decorations theme-specific and useful for decorating the merge workbench area.",
+    "Solid pure white background only, isolated sticker props, blank unbranded surfaces.",
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+}
+
+function buildSafeShopDecorStickerPrompt(handshake) {
+  const concept = handshake?.concept || {};
+  return [
+    "Generate a 2x3 sticker sheet for an original fantasy shop game.",
+    "Use original shop props, original silhouettes, blank labels, and unbranded designs.",
+    `Shop idea: ${concept.shopIdea || "custom shop"}`,
+    `Shop name: ${concept.shopName || "custom shop"}`,
+    "Create 6 large decorative shop props: shelf, display, counter, wall prop, floor prop, lamp or door-like prop.",
+    "Every cell contains one centered isolated object only, with generous pure white padding.",
+    "Blank unbranded surfaces, isolated objects, generous whitespace, and no visible grid lines.",
+    "Warm handcrafted casual game sticker style, solid pure white background only.",
+  ].join("\n\n");
+}
+
+function buildUiButtonStickerPrompt(handshake) {
+  const concept = handshake?.concept || {};
+  const prompt = handshake?.prompts?.uiButtonStickers || "";
+  return [
+    prompt,
+    `World: ${concept.worldName || "Unknown World"}`,
+    `Shop idea: ${concept.shopIdea || ""}`,
+    `Shop name: ${concept.shopName || ""}`,
+    "The five button stickers must remain readable at small sizes and match the shop theme.",
+    "Solid pure white background only, isolated sticker icons, blank unbranded surfaces.",
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+}
+
+function buildSafeUiButtonStickerPrompt(handshake) {
+  const concept = handshake?.concept || {};
+  return [
+    "Generate a 1x5 horizontal sticker sheet for original fantasy shop game controls.",
+    "Use original icon props, original silhouettes, blank labels, and unbranded designs.",
+    `Shop idea: ${concept.shopIdea || "custom shop"}`,
+    "Five slots left to right: lobby icon, collection book icon, favorites shelf icon, restart icon, trash icon.",
+    "Every cell contains one centered isolated icon-like object only, with generous pure white padding.",
+    "Blank unbranded surfaces, isolated icons, generous whitespace, and no visible grid lines.",
+    "Warm handcrafted casual game sticker style, solid pure white background only.",
   ].join("\n\n");
 }
 
@@ -658,6 +716,71 @@ async function writeTileManifest({ manifestPath, jobId, sheetPath, tileBaseUrl, 
   return manifest;
 }
 
+async function writeStickerManifest({ manifestPath, jobId, sheetPath, baseUrl, splitResult, stickerDefinitions }) {
+  const stickers = splitResult.tiles.map((tile, index) => {
+    const definition = stickerDefinitions[index] || {};
+    return {
+      ...tile,
+      id: definition.id || tile.id,
+      role: definition.role || definition.id || tile.id,
+      label: definition.label || definition.id || tile.id,
+      defaultLeft: definition.defaultLeft ?? null,
+      defaultTop: definition.defaultTop ?? null,
+      defaultWidth: definition.defaultWidth ?? null,
+      url: `${baseUrl}/${tile.fileName}`,
+    };
+  });
+
+  const manifest = {
+    version: 1,
+    jobId,
+    generatedAt: new Date().toISOString(),
+    sheet: {
+      path: sheetPath,
+      width: splitResult.width,
+      height: splitResult.height,
+    },
+    grid: {
+      rows: splitResult.height / splitResult.tileHeight,
+      cols: splitResult.width / splitResult.tileWidth,
+      tileWidth: splitResult.tileWidth,
+      tileHeight: splitResult.tileHeight,
+    },
+    baseUrl,
+    stickers,
+    bindings: stickers.reduce((accumulator, sticker) => {
+      accumulator[sticker.id] = sticker;
+      if (sticker.role) accumulator[sticker.role] = sticker;
+      return accumulator;
+    }, {}),
+  };
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, JSON.stringify(manifest, null, 2), "utf8");
+  return manifest;
+}
+
+async function generateStickerSheet({ handshake, fileId, prompt, promptVariants, width, height, aspect }) {
+  const outputSlots = handshake?.assets?.outputSlots || {};
+  const sheetFile = outputSlots.requiredFiles?.find((item) => item.id === fileId);
+  if (!sheetFile?.path) {
+    throw new Error(`Missing ${fileId} output path in handshake`);
+  }
+  const generation = await runNetaMakeImage({ prompt, promptVariants, width, height, aspect });
+  const rawOutputPath = sheetFile.path.replace(/\.png$/i, "_raw.png");
+  await downloadToFile(generation.imageUrl, rawOutputPath);
+  const cutout = await runNetaRemoveBackground(generation.artifactUuid);
+  const cutoutOutputPath = sheetFile.path.replace(/\.png$/i, "_cutout.png");
+  await downloadToFile(cutout.imageUrl, cutoutOutputPath);
+  await fitImageContainToCanvas(cutoutOutputPath, sheetFile.path, width, height);
+  return {
+    imageUrl: cutout.imageUrl,
+    rawOutputPath,
+    cutoutOutputPath,
+    outputPath: sheetFile.path,
+    stdout: generation.stdout,
+  };
+}
+
 export async function generateShopSheetAssets(handshake) {
   const outputSlots = handshake?.assets?.outputSlots || {};
   const shopSheetFile = outputSlots.requiredFiles?.find((item) => item.id === "shop_sheet_4x8");
@@ -707,9 +830,7 @@ export async function generateAssistantPortraitAsset(handshake) {
   const cutout = await runNetaRemoveBackground(generation.artifactUuid);
   const cutoutOutputPath = portraitSheetFile.path.replace(/\.png$/i, "_cutout.png");
   await downloadToFile(cutout.imageUrl, cutoutOutputPath);
-  const trimmedOutputPath = portraitSheetFile.path.replace(/\.png$/i, "_trimmed.png");
-  await trimImageToAlphaBounds(cutoutOutputPath, trimmedOutputPath);
-  await fitImageContainToCanvas(trimmedOutputPath, portraitSheetFile.path, 1600, 900);
+  await fitImageContainToCanvas(cutoutOutputPath, portraitSheetFile.path, 1600, 900);
 
   const splitResult = await splitSheetToTiles({
     sheetPath: portraitSheetFile.path,
@@ -717,7 +838,7 @@ export async function generateAssistantPortraitAsset(handshake) {
     rows: 1,
     cols: 4,
     filenamePrefix: "expression",
-    trimTiles: false,
+    trimTiles: true,
   });
 
   const portraitFiles = {
@@ -768,7 +889,7 @@ export async function generateAssistantPortraitAsset(handshake) {
     imageUrl: cutout.imageUrl,
     rawOutputPath,
     cutoutOutputPath,
-    trimmedOutputPath,
+    trimmedOutputPath: null,
     outputPath: portraitSheetFile.path,
     manifestPath: portraitManifestFile.path,
     portraitBaseUrl,
@@ -777,6 +898,109 @@ export async function generateAssistantPortraitAsset(handshake) {
       return accumulator;
     }, {}),
     stdout: generation.stdout,
+  };
+}
+
+export async function generateShopDecorStickerAssets(handshake) {
+  return generateStickerSheet({
+    handshake,
+    fileId: "shop_decor_stickers_2x3",
+    prompt: buildShopDecorStickerPrompt(handshake),
+    promptVariants: [buildSafeShopDecorStickerPrompt(handshake)],
+    width: 1536,
+    height: 1024,
+  });
+}
+
+export async function generateUiButtonStickerAssets(handshake) {
+  return generateStickerSheet({
+    handshake,
+    fileId: "ui_button_stickers_1x5",
+    prompt: buildUiButtonStickerPrompt(handshake),
+    promptVariants: [buildSafeUiButtonStickerPrompt(handshake)],
+    width: 1600,
+    height: 320,
+  });
+}
+
+export async function splitGeneratedShopDecorStickers(handshake) {
+  const outputSlots = handshake?.assets?.outputSlots || {};
+  const generationPlan = handshake?.assets?.generationPlan || {};
+  const sheetFile = outputSlots.requiredFiles?.find((item) => item.id === "shop_decor_stickers_2x3");
+  const manifestFile = outputSlots.requiredFiles?.find((item) => item.id === "shop_decor_manifest");
+  if (!sheetFile?.path || !manifestFile?.path || !outputSlots.decorOutputDir) {
+    throw new Error("Missing shop decoration output configuration in handshake");
+  }
+  const rows = Number(generationPlan?.decorSplit?.rows || 2);
+  const cols = Number(generationPlan?.decorSplit?.cols || 3);
+  const splitResult = await splitSheetToTiles({
+    sheetPath: sheetFile.path,
+    outputDir: outputSlots.decorOutputDir,
+    rows,
+    cols,
+    filenamePrefix: "decor",
+  });
+  const baseUrl = `/generated/build-artifacts/${handshake.job.jobId}/shop_decorations`;
+  const definitions = [
+    { id: "decor-1", label: "店面装饰 1", defaultLeft: 5, defaultTop: 68, defaultWidth: 192 },
+    { id: "decor-2", label: "店面装饰 2", defaultLeft: 8, defaultTop: 71, defaultWidth: 176 },
+    { id: "decor-3", label: "店面装饰 3", defaultLeft: 11, defaultTop: 74, defaultWidth: 192 },
+    { id: "decor-4", label: "店面装饰 4", defaultLeft: 14, defaultTop: 77, defaultWidth: 176 },
+    { id: "decor-5", label: "店面装饰 5", defaultLeft: 17, defaultTop: 80, defaultWidth: 176 },
+    { id: "decor-6", label: "店面装饰 6", defaultLeft: 20, defaultTop: 83, defaultWidth: 176 },
+  ];
+  const manifest = await writeStickerManifest({
+    manifestPath: manifestFile.path,
+    jobId: handshake.job.jobId,
+    sheetPath: sheetFile.path,
+    baseUrl,
+    splitResult,
+    stickerDefinitions: definitions,
+  });
+  return {
+    manifest,
+    baseUrl,
+    stickerCount: splitResult.tiles.length,
+  };
+}
+
+export async function splitGeneratedUiButtonStickers(handshake) {
+  const outputSlots = handshake?.assets?.outputSlots || {};
+  const generationPlan = handshake?.assets?.generationPlan || {};
+  const sheetFile = outputSlots.requiredFiles?.find((item) => item.id === "ui_button_stickers_1x5");
+  const manifestFile = outputSlots.requiredFiles?.find((item) => item.id === "ui_button_manifest");
+  if (!sheetFile?.path || !manifestFile?.path || !outputSlots.uiButtonOutputDir) {
+    throw new Error("Missing UI button output configuration in handshake");
+  }
+  const rows = Number(generationPlan?.uiButtonSplit?.rows || 1);
+  const cols = Number(generationPlan?.uiButtonSplit?.cols || 5);
+  const splitResult = await splitSheetToTiles({
+    sheetPath: sheetFile.path,
+    outputDir: outputSlots.uiButtonOutputDir,
+    rows,
+    cols,
+    filenamePrefix: "button",
+  });
+  const baseUrl = `/generated/build-artifacts/${handshake.job.jobId}/ui_buttons`;
+  const definitions = [
+    { id: "hall", role: "hall", label: "大厅" },
+    { id: "codex", role: "codex", label: "图鉴" },
+    { id: "shelf", role: "shelf", label: "收藏" },
+    { id: "reset", role: "reset", label: "重开" },
+    { id: "trash", role: "trash", label: "垃圾桶" },
+  ];
+  const manifest = await writeStickerManifest({
+    manifestPath: manifestFile.path,
+    jobId: handshake.job.jobId,
+    sheetPath: sheetFile.path,
+    baseUrl,
+    splitResult,
+    stickerDefinitions: definitions,
+  });
+  return {
+    manifest,
+    baseUrl,
+    stickerCount: splitResult.tiles.length,
   };
 }
 
@@ -829,5 +1053,7 @@ export function buildGeneratedRuntimeConfig(handshake) {
       angry: `${portraitBaseUrl}/angry.png`,
       confused: `${portraitBaseUrl}/confused.png`,
     },
+    decorationManifestUrl: `/generated/build-artifacts/${jobId}/shop_decorations/manifest.json`,
+    uiButtonManifestUrl: `/generated/build-artifacts/${jobId}/ui_buttons/manifest.json`,
   };
 }

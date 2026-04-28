@@ -1,0 +1,90 @@
+{
+  "source": "/Users/yves/Downloads/5df87b69-fa7f-4e1d-9c82-76ff0de13e8a.webp",
+  "generatedAt": "2026-04-27T11:04:52.960Z",
+  "stickers": [
+    {
+      "id": "wand-rack",
+      "fileName": "decor_01_wand-rack.png",
+      "url": "/generated/shop-stickers/ollivanders-decor/decor_01_wand-rack.png",
+      "width": 889,
+      "height": 487,
+      "sourceBounds": {
+        "x": 46,
+        "y": 55,
+        "width": 889,
+        "height": 487
+      },
+      "pixelCount": 263518
+    },
+    {
+      "id": "wand-box-shelf",
+      "fileName": "decor_02_wand-box-shelf.png",
+      "url": "/generated/shop-stickers/ollivanders-decor/decor_02_wand-box-shelf.png",
+      "width": 736,
+      "height": 499,
+      "sourceBounds": {
+        "x": 1015,
+        "y": 69,
+        "width": 736,
+        "height": 499
+      },
+      "pixelCount": 263680
+    },
+    {
+      "id": "shop-counter",
+      "fileName": "decor_03_shop-counter.png",
+      "url": "/generated/shop-stickers/ollivanders-decor/decor_03_shop-counter.png",
+      "width": 832,
+      "height": 639,
+      "sourceBounds": {
+        "x": 1870,
+        "y": 81,
+        "width": 832,
+        "height": 639
+      },
+      "pixelCount": 312322
+    },
+    {
+      "id": "wand-display-case",
+      "fileName": "decor_04_wand-display-case.png",
+      "url": "/generated/shop-stickers/ollivanders-decor/decor_04_wand-display-case.png",
+      "width": 635,
+      "height": 691,
+      "sourceBounds": {
+        "x": 1980,
+        "y": 820,
+        "width": 635,
+        "height": 691
+      },
+      "pixelCount": 348783
+    },
+    {
+      "id": "wood-floor",
+      "fileName": "decor_05_wood-floor.png",
+      "url": "/generated/shop-stickers/ollivanders-decor/decor_05_wood-floor.png",
+      "width": 781,
+      "height": 596,
+      "sourceBounds": {
+        "x": 86,
+        "y": 890,
+        "width": 781,
+        "height": 596
+      },
+      "pixelCount": 334292
+    },
+    {
+      "id": "closed-door",
+      "fileName": "decor_06_closed-door.png",
+      "url": "/generated/shop-stickers/ollivanders-decor/decor_06_closed-door.png",
+      "width": 858,
+      "height": 269,
+      "sourceBounds": {
+        "x": 947,
+        "y": 1230,
+        "width": 858,
+        "height": 269
+      },
+      "pixelCount": 150333
+    }
+  ]
+}

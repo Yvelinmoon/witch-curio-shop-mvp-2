@@ -1,0 +1,223 @@
+{
+  "source": "/Users/yves/Downloads/e597b732-37ef-4eb8-a425-3aee72b60eab (1).webp",
+  "columns": 6,
+  "rows": 4,
+  "stickers": [
+    {
+      "id": "sorting-hat",
+      "fileName": "sticker_01_sorting-hat.png",
+      "url": "/generated/shop-stickers/hp-wood/sticker_01_sorting-hat.png",
+      "row": 1,
+      "col": 1,
+      "width": 366,
+      "height": 319
+    },
+    {
+      "id": "golden-snitch",
+      "fileName": "sticker_02_golden-snitch.png",
+      "url": "/generated/shop-stickers/hp-wood/sticker_02_golden-snitch.png",
+      "row": 1,
+      "col": 2,
+      "width": 362,
+      "height": 255
+    },
+    {
+      "id": "wand",
+      "fileName": "sticker_03_wand.png",
+      "url": "/generated/shop-stickers/hp-wood/sticker_03_wand.png",
+      "row": 1,
+      "col": 3,
+      "width": 343,
+      "height": 358
+    },
+    {
+      "id": "lightning",
+      "fileName": "sticker_04_lightning.png",
+      "url": "/generated/shop-stickers/hp-wood/sticker_04_lightning.png",
+      "row": 1,
+      "col": 4,
+      "width": 196,
+      "height": 358
+    },
+    {
+      "id": "owl",
+      "fileName": "sticker_05_owl.png",
+      "url": "/generated/shop-stickers/hp-wood/sticker_05_owl.png",
+      "row": 1,
+      "col": 5,
+      "width": 279,
+      "height": 354
+    },
+    {
+      "id": "cauldron",
+      "fileName": "sticker_06_cauldron.png",
+      "url": "/generated/shop-stickers/hp-wood/sticker_06_cauldron.png",
+      "row": 1,
+      "col": 6,
+      "width": 335,
+      "height": 320
+    },
+    {
+      "id": "potion-round",
+      "fileName": "sticker_07_potion-round.png",
+      "url": "/generated/shop-stickers/hp-wood/sticker_07_potion-round.png",
+      "row": 2,
+      "col": 1,
+      "width": 249,
+      "height": 361
+    },
+    {
+      "id": "spell-book",
+      "fileName": "sticker_08_spell-book.png",
+      "url": "/generated/shop-stickers/hp-wood/sticker_08_spell-book.png",
+      "row": 2,
+      "col": 2,
+      "width": 307,
+      "height": 360
+    },
+    {
+      "id": "broom",
+      "fileName": "sticker_09_broom.png",
+      "url": "/generated/shop-stickers/hp-wood/sticker_09_broom.png",
+      "row": 2,
+      "col": 3,
+      "width": 351,
+      "height": 368
+    },
+    {
+      "id": "hogwarts-crest",
+      "fileName": "sticker_10_hogwarts-crest.png",
+      "url": "/generated/shop-stickers/hp-wood/sticker_10_hogwarts-crest.png",
+      "row": 2,
+      "col": 4,
+      "width": 360,
+      "height": 360
+    },
+    {
+      "id": "frog",
+      "fileName": "sticker_11_frog.png",
+      "url": "/generated/shop-stickers/hp-wood/sticker_11_frog.png",
+      "row": 2,
+      "col": 5,
+      "width": 357,
+      "height": 314
+    },
+    {
+      "id": "feather",
+      "fileName": "sticker_12_feather.png",
+      "url": "/generated/shop-stickers/hp-wood/sticker_12_feather.png",
+      "row": 2,
+      "col": 6,
+      "width": 294,
+      "height": 360
+    },
+    {
+      "id": "time-turner",
+      "fileName": "sticker_13_time-turner.png",
+      "url": "/generated/shop-stickers/hp-wood/sticker_13_time-turner.png",
+      "row": 3,
+      "col": 1,
+      "width": 368,
+      "height": 324
+    },
+    {
+      "id": "deathly-hallows",
+      "fileName": "sticker_14_deathly-hallows.png",
+      "url": "/generated/shop-stickers/hp-wood/sticker_14_deathly-hallows.png",
+      "row": 3,
+      "col": 2,
+      "width": 355,
+      "height": 323
+    },
+    {
+      "id": "platform-nine",
+      "fileName": "sticker_15_platform-nine.png",
+      "url": "/generated/shop-stickers/hp-wood/sticker_15_platform-nine.png",
+      "row": 3,
+      "col": 3,
+      "width": 319,
+      "height": 335
+    },
+    {
+      "id": "mandrake",
+      "fileName": "sticker_16_mandrake.png",
+      "url": "/generated/shop-stickers/hp-wood/sticker_16_mandrake.png",
+      "row": 3,
+      "col": 4,
+      "width": 252,
+      "height": 381
+    },
+    {
+      "id": "crystal-ball",
+      "fileName": "sticker_17_crystal-ball.png",
+      "url": "/generated/shop-stickers/hp-wood/sticker_17_crystal-ball.png",
+      "row": 3,
+      "col": 5,
+      "width": 295,
+      "height": 357
+    },
+    {
+      "id": "chess-piece",
+      "fileName": "sticker_18_chess-piece.png",
+      "url": "/generated/shop-stickers/hp-wood/sticker_18_chess-piece.png",
+      "row": 3,
+      "col": 6,
+      "width": 210,
+      "height": 364
+    },
+    {
+      "id": "howler",
+      "fileName": "sticker_19_howler.png",
+      "url": "/generated/shop-stickers/hp-wood/sticker_19_howler.png",
+      "row": 4,
+      "col": 1,
+      "width": 324,
+      "height": 309
+    },
+    {
+      "id": "cloak",
+      "fileName": "sticker_20_cloak.png",
+      "url": "/generated/shop-stickers/hp-wood/sticker_20_cloak.png",
+      "row": 4,
+      "col": 2,
+      "width": 300,
+      "height": 364
+    },
+    {
+      "id": "marauders-map",
+      "fileName": "sticker_21_marauders-map.png",
+      "url": "/generated/shop-stickers/hp-wood/sticker_21_marauders-map.png",
+      "row": 4,
+      "col": 3,
+      "width": 315,
+      "height": 363
+    },
+    {
+      "id": "potion-vial",
+      "fileName": "sticker_22_potion-vial.png",
+      "url": "/generated/shop-stickers/hp-wood/sticker_22_potion-vial.png",
+      "row": 4,
+      "col": 4,
+      "width": 180,
+      "height": 375
+    },
+    {
+      "id": "quill",
+      "fileName": "sticker_23_quill.png",
+      "url": "/generated/shop-stickers/hp-wood/sticker_23_quill.png",
+      "row": 4,
+      "col": 5,
+      "width": 288,
+      "height": 359
+    },
+    {
+      "id": "train",
+      "fileName": "sticker_24_train.png",
+      "url": "/generated/shop-stickers/hp-wood/sticker_24_train.png",
+      "row": 4,
+      "col": 6,
+      "width": 357,
+      "height": 283
+    }
+  ]
+}
