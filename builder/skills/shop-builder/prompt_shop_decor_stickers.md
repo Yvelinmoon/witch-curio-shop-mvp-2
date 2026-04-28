@@ -3,7 +3,7 @@ Generate a shop decoration sticker sheet for a customizable world shop game.
 Use this prompt as the base template. The user may replace or extend it.
 
 Create 6 large decorative shop props that can be placed around a merge workbench.
-The props should strongly match the shop theme, world context, and business fantasy.
+The props should strongly match the shop theme, world context, and business experience.
 They should feel like physical decorations inside the shop: shelves, signs, counters,
 display cases, doors, lamps, crates, cabinets, wall props, floor props, or themed ornaments.
 

@@ -1,10 +1,10 @@
 Generate a single 16:9 expression sheet for a shop helper character.
 
-Use the image-gen prompt template below:
-
-{character_name}, {age_and_gender}, {distinctive_feature_1}, {distinctive_feature_2},
-wearing {outfit_description},
-{expression}, {body_frame} portrait,
+Design the assistant strictly from the provided shop idea, shop name, assistant name, role, and summary.
+Do not add species, body features, technology, powers, factions, or genre elements that were not provided.
+For a real-world shop, use a believable shop worker outfit and grounded character design.
+Four expressions in one horizontal row: smile, serious, angry, confused.
+Half-body portrait framing,
 clean casual game portrait style, soft colors, consistent proportions,
 pure white background, no text no labels no borders,
 four panels must be visually separated by generous empty white spacing,

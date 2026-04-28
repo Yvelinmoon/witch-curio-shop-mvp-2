@@ -324,6 +324,33 @@
     return next;
   }
 
+  function stripUnrequestedConceptAdditions(value, shopIdea = "") {
+    if (typeof value !== "string") return value;
+    const idea = String(shopIdea || "");
+    const keepIfMentioned = (terms) => terms.some((term) => idea.includes(term));
+    const blockedPatterns = [
+      { pattern: /半机械|义肢|机械臂|机械义肢|赛博|芯片|仿生/g, terms: ["机械", "义肢", "赛博", "芯片", "仿生"] },
+      { pattern: /精灵|矮人|兽人|龙族|妖精|仙子|非人类/g, terms: ["精灵", "矮人", "兽人", "龙族", "妖精", "仙子", "非人类"] },
+      { pattern: /魔法|魔力|秘法|法术|咒语|巫师|炼金|草药配方/g, terms: ["魔法", "魔力", "秘法", "法术", "咒语", "巫师", "炼金", "草药"] },
+      { pattern: /异世界|异世|星际|星穹|时空|穿越|超能力/g, terms: ["异世界", "异世", "星际", "星穹", "时空", "穿越", "超能力"] },
+      { pattern: /军方|情报局|最高指挥部|阵营|战术|作战/g, terms: ["军", "情报", "指挥部", "阵营", "战术", "作战", "红色警戒", "兵种", "战车", "战舰"] },
+    ];
+    let next = value;
+    blockedPatterns.forEach(({ pattern, terms }) => {
+      if (!keepIfMentioned(terms)) {
+        next = next.replace(pattern, "");
+      }
+    });
+    return next
+      .replace(/拥有的/g, "")
+      .replace(/在与交织的/g, "在")
+      .replace(/古老的与现代/g, "专业")
+      .replace(/，{2,}/g, "，")
+      .replace(/。{2,}/g, "。")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
   function pickCreatorTheme(input = "") {
     const value = String(input || "").toLowerCase();
     if (value.includes("tesla") || value.includes("特斯拉") || value.includes("电车") || value.includes("新能源")) {
@@ -977,9 +1004,11 @@
       "- write as player-facing world content",
       "- focus the first version on one shop, one assistant, a few source stations, simple requests, and clear daily progress",
       "- use concrete shop goods, shop roles, customer needs, tools, decorations, and daily operation language",
-      "- the user's shop theme must dominate the merchandise, supply stations, and first-session fantasy",
+      "- the user's shop theme must dominate the merchandise, supply stations, and first-session experience",
       "- the world setting is external input and should only act as flavor framing unless the user explicitly asks for deeper coupling",
       "- choose merchandise categories from the user's shop idea before adding world flavor",
+      "- do not add settings, species, body features, technology, powers, professions, factions, or world elements that the user or world context did not mention",
+      "- for real-world shop ideas, keep the assistant grounded in a believable shop role unless the user explicitly asks for another genre",
       "- choose a distinct visual theme for the playable shop screen: background, panels, cards, borders, text, accent, and highlight colors should fit the user's shop idea",
       "- make every text color clearly readable against its own panel, card, tab, button, dialogue bubble, modal, toast, and report background",
       "- modal overlay colors should be dark and dim, not pale, bright, or washed out",
@@ -1009,15 +1038,19 @@
     }
 
     const shopName = parsed.shopName || shopIdea;
+    const cleanedAssistantRole = stripUnrequestedConceptAdditions(parsed.assistantRole, shopIdea);
+    const cleanedAssistantSummary = stripUnrequestedConceptAdditions(parsed.assistantSummary, shopIdea);
+    const cleanedSummary = stripUnrequestedConceptAdditions(parsed.summary, shopIdea);
+    const cleanedLoopSummary = stripUnrequestedConceptAdditions(parsed.loopSummary, shopIdea);
     const concept = {
       worldName,
       shopIdea,
       shopName,
       assistantName: parsed.assistantName || "店员助手",
-      assistantRole: parsed.assistantRole || "店长助手",
-      assistantSummary: parsed.assistantSummary || "这位店员会先陪你确认开张前的细节，并在柜台旁解释第一轮经营节奏。",
-      summary: parsed.summary || `${shopName}会成为这座世界里第一家围绕日常需求开张的主题店。`,
-      loopSummary: parsed.loopSummary || "玩家会通过进货、合成和交付订单推进店铺经营。",
+      assistantRole: cleanedAssistantRole || "店长助手",
+      assistantSummary: cleanedAssistantSummary || "这位店员会先陪你确认开张前的细节，并在柜台旁解释第一轮经营节奏。",
+      summary: cleanedSummary || `${shopName}会成为这座世界里第一家围绕日常需求开张的主题店。`,
+      loopSummary: cleanedLoopSummary || "玩家会通过进货、合成和交付订单推进店铺经营。",
       confirmationLine: parsed.confirmationLine || `先把「${shopName}」搭起来。`,
       readySummary: parsed.readySummary || "店铺已经准备好，可以开始经营。",
       loadingPortraitUrl: "/Downloads/hermione_emotions_tiles_1x4_trimmed/serious.png",

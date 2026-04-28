@@ -320,16 +320,16 @@ function buildMetaContentPackPrompt(input = {}, concept = {}) {
     "Use concrete goods, shop roles, customer needs, tools, decorations, and daily operation language.",
     ...buildContentPackContextLines(input, concept),
     "JSON format:",
-    "sources[{id,name,shortLabel,blurb}]",
+    "sources[{name,shortLabel,blurb}]",
     "clients[{name,role,requestFlavor}]",
-    "blessings[{id,title,description,tags}]",
+    "blessings[{title,description,tags}]",
     "introSequence[{speaker,text}]",
     "Structural notes:",
-    "sources ids fixed and count fixed at 3: botanical, alchemy, curio",
-    "These ids are internal handles; visible source names should come from the chosen shop theme.",
+    "sources count fixed: 3",
+    "Return sources in this order: base ingredient station, processed ingredient station, display or tool station. Do not include internal ids.",
     "The three sources should read like three concrete shop-facing stations that fit the chosen business theme.",
     "clients count fixed: 5",
-    "blessings ids fixed and count fixed at 3: greenhouse, cauldron, owl",
+    "blessings count fixed: 3. Do not include internal ids.",
     "introSequence count fixed: 4",
     "All visible names and descriptions prioritize the user's shop theme first.",
     "The world setting is only flavor overlay and story framing.",
@@ -350,9 +350,9 @@ function buildCoreChainsPrompt(input = {}, concept = {}) {
     "JSON format:",
     "chains[{id,label,items:[{name,description}]}]",
     "Structural notes:",
-    "Return exactly 3 chains: botanical, alchemy, curio",
-    "botanical=6 items, alchemy=6 items, curio=6 items",
-    "These ids are internal handles; visible chain labels and item names should come from the chosen shop theme.",
+    "Return exactly 3 chains in this order: base ingredients, processed ingredients, tools or display goods.",
+    "Each chain has exactly 6 items. Do not include internal ids.",
+    "Visible chain labels and item names should come from the chosen shop theme.",
     "All visible names must prioritize the user's shop theme first.",
     "The 18 items should be tangible, shop-relevant assets for this theme.",
     "Output only the JSON object.",
@@ -372,12 +372,9 @@ function buildSpecialChainsPrompt(input = {}, concept = {}) {
     "chains[{id,label,items:[{name,description}]}]",
     "recipes[{ingredients,resultItemId,title,body}]",
     "Structural notes:",
-    "Return exactly 2 chains: waste, secret",
-    "waste=6 items, secret=8 items",
-    "recipes fixed exactly 3:",
-    "1) botanical-2 + alchemy-2 -> secret-1",
-    "2) botanical-3 + curio-3 -> secret-2",
-    "3) alchemy-4 + curio-4 -> secret-4",
+    "Return exactly 2 chains in this order: failed outputs, rare discoveries.",
+    "Failed outputs chain has exactly 6 items. Rare discoveries chain has exactly 8 items. Do not include internal ids.",
+    "recipes count fixed: 3. Return only title and body for each recipe; do not include ingredient ids or result ids.",
     "Waste items should feel like failed outputs for this shop theme.",
     "Secret items should feel like rare, surprising upgrades for this shop theme.",
     "Output only the JSON object.",
@@ -457,11 +454,25 @@ function coerceObjectListById(value, fallback = [], ids = []) {
   });
 }
 
+function coerceObjectListByOrder(value, fallback = [], ids = []) {
+  const source = Array.isArray(value) ? value : [];
+  const fallbackById = new Map(fallback.map((item) => [item.id, item]));
+  return ids.map((id, index) => {
+    const current = source[index] && typeof source[index] === "object" ? source[index] : {};
+    const backup = fallbackById.get(id) || fallback[index] || { id };
+    return {
+      ...backup,
+      ...current,
+      id,
+    };
+  });
+}
+
 function coerceContentPackPart(sectionName, parsedPart, basePack) {
   const part = parsedPart && typeof parsedPart === "object" ? parsedPart : {};
   if (sectionName === "meta") {
     return {
-      sources: coerceObjectListById(part.sources, basePack.sources, ["botanical", "alchemy", "curio"]).map((item, index) => ({
+      sources: coerceObjectListByOrder(part.sources, basePack.sources, ["botanical", "alchemy", "curio"]).map((item, index) => ({
         id: item.id,
         name: coerceText(item.name, basePack.sources[index]?.name || item.id),
         shortLabel: coerceText(item.shortLabel, basePack.sources[index]?.shortLabel || item.name || item.id),
@@ -476,7 +487,7 @@ function coerceContentPackPart(sectionName, parsedPart, basePack) {
           requestFlavor: coerceText(item.requestFlavor, backup.requestFlavor || "需要一份适合当前店铺主题的货品。"),
         };
       }),
-      blessings: coerceObjectListById(part.blessings, basePack.blessings, ["greenhouse", "cauldron", "owl"]).map((item, index) => ({
+      blessings: coerceObjectListByOrder(part.blessings, basePack.blessings, ["greenhouse", "cauldron", "owl"]).map((item, index) => ({
         id: item.id,
         title: coerceText(item.title, basePack.blessings[index]?.title || "今日生意顺手"),
         description: coerceText(item.description, basePack.blessings[index]?.description || "今天更容易获得额外进展。"),
@@ -496,7 +507,7 @@ function coerceContentPackPart(sectionName, parsedPart, basePack) {
   if (sectionName === "core-chains") {
     const chainIds = ["botanical", "alchemy", "curio"];
     return {
-      chains: coerceObjectListById(part.chains, basePack.chains.filter((chain) => chainIds.includes(chain.id)), chainIds).map((chain) => {
+      chains: coerceObjectListByOrder(part.chains, basePack.chains.filter((chain) => chainIds.includes(chain.id)), chainIds).map((chain) => {
         const backup = getChainById(basePack, chain.id) || {};
         const sourceItems = Array.isArray(chain.items) ? chain.items : [];
         return {
@@ -518,7 +529,7 @@ function coerceContentPackPart(sectionName, parsedPart, basePack) {
   const chainIds = ["waste", "secret"];
   const recipes = Array.isArray(part.recipes) ? part.recipes : [];
   return {
-    chains: coerceObjectListById(part.chains, basePack.chains.filter((chain) => chainIds.includes(chain.id)), chainIds).map((chain) => {
+    chains: coerceObjectListByOrder(part.chains, basePack.chains.filter((chain) => chainIds.includes(chain.id)), chainIds).map((chain) => {
       const backup = getChainById(basePack, chain.id) || {};
       const itemCount = chain.id === "secret" ? 8 : 6;
       const sourceItems = Array.isArray(chain.items) ? chain.items : [];
@@ -640,6 +651,8 @@ class NetaLLMAdapter {
       "Every returned string should read like player-facing content from inside the shop world.",
       "The assistant should be a believable shop-world character or helper with a concrete role, personality, and reason to be present.",
       "Use practical shop language: merchandise, supply, customers, daily work, opening preparation, and first orders.",
+      "Do not add settings, species, body features, technology, powers, professions, factions, or world elements that the user or world context did not mention.",
+      "For real-world shop ideas, keep the assistant grounded in a believable shop role unless the user explicitly asks for another genre.",
       "Output valid compact JSON only. Every key and string must use normal double quotes.",
       builderPrompts.concept,
       `World: ${input.worldName}`,
@@ -758,7 +771,7 @@ class NetaLLMAdapter {
       const metaPart = await parseSection({
         sectionName: "meta",
         text: metaText,
-        shapeHint: "{sources:[{id,name,shortLabel,blurb}],clients:[{name,role,requestFlavor}],blessings:[{id,title,description,tags}],introSequence:[{speaker,text}]}",
+        shapeHint: "{sources:[{name,shortLabel,blurb}],clients:[{name,role,requestFlavor}],blessings:[{title,description,tags}],introSequence:[{speaker,text}]}",
         maxTokens: 750,
       });
 
@@ -774,7 +787,7 @@ class NetaLLMAdapter {
       const corePart = await parseSection({
         sectionName: "core-chains",
         text: coreText,
-        shapeHint: "{chains:[{id,label,items:[{name,description}]}]}",
+        shapeHint: "{chains:[{label,items:[{name,description}]}]}",
         maxTokens: 950,
       });
 
@@ -790,7 +803,7 @@ class NetaLLMAdapter {
       const specialPart = await parseSection({
         sectionName: "special-chains",
         text: specialText,
-        shapeHint: "{chains:[{id,label,items:[{name,description}]}],recipes:[{ingredients,resultItemId,title,body}]}",
+        shapeHint: "{chains:[{label,items:[{name,description}]}],recipes:[{title,body}]}",
         maxTokens: 950,
       });
 
@@ -1441,11 +1454,50 @@ function sanitizeConceptPayload(parsed = {}, input = {}) {
   const fallbackShopName = buildShopName(input.shopIdea);
   const shopName = stripMetaAiText(cleaned.shopName) || fallbackShopName;
   const assistantName = stripMetaAiText(cleaned.assistantName) || "店员助手";
+  const idea = sanitizeShopIdea(input.shopIdea);
+  const assistantRole = stripUnrequestedConceptAdditions(stripMetaAiText(cleaned.assistantRole), idea) || "店长助手";
+  const assistantSummary = stripUnrequestedConceptAdditions(stripMetaAiText(cleaned.assistantSummary), idea);
+  const summary = stripUnrequestedConceptAdditions(stripMetaAiText(cleaned.summary), idea);
+  const loopSummary = stripUnrequestedConceptAdditions(stripMetaAiText(cleaned.loopSummary), idea);
   return {
     ...cleaned,
     shopName,
     assistantName,
+    assistantRole,
+    assistantSummary,
+    summary,
+    loopSummary,
   };
+}
+
+function stripUnrequestedConceptAdditions(value, shopIdea = "") {
+  if (typeof value !== "string") return value;
+  const idea = String(shopIdea || "");
+  const keepIfMentioned = (terms) => terms.some((term) => idea.includes(term));
+  const blockedPatterns = [
+    { pattern: /半机械|义肢|机械臂|机械义肢|赛博|芯片|仿生/g, terms: ["机械", "义肢", "赛博", "芯片", "仿生"] },
+    { pattern: /精灵|矮人|兽人|龙族|妖精|仙子|非人类/g, terms: ["精灵", "矮人", "兽人", "龙族", "妖精", "仙子", "非人类"] },
+    { pattern: /魔法|魔力|秘法|法术|咒语|巫师|炼金|草药配方/g, terms: ["魔法", "魔力", "秘法", "法术", "咒语", "巫师", "炼金", "草药"] },
+    { pattern: /异世界|异世|星际|星穹|时空|穿越|超能力/g, terms: ["异世界", "异世", "星际", "星穹", "时空", "穿越", "超能力"] },
+    { pattern: /军方|情报局|最高指挥部|阵营|战术|作战/g, terms: ["军", "情报", "指挥部", "阵营", "战术", "作战", "红色警戒", "兵种", "战车", "战舰"] },
+  ];
+  let next = value;
+  blockedPatterns.forEach(({ pattern, terms }) => {
+    if (!keepIfMentioned(terms)) {
+      next = next.replace(pattern, "");
+    }
+  });
+  return next
+    .replace(/拥有的/g, "")
+    .replace(/在与交织的/g, "在")
+    .replace(/古老的与现代/g, "专业")
+    .replace(/[\u000b\f\r]/g, "")
+    .replace(/\t/g, " ")
+    .replace(/[，,]+/g, "，")
+    .replace(/，{2,}/g, "，")
+    .replace(/。{2,}/g, "。")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function extractMessageText(payload) {

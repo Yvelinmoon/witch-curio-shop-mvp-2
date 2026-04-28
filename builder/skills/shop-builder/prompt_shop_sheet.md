@@ -1,4 +1,4 @@
-Generate a single sprite sheet for a top-down / slight-front-view magical shop merge game.
+Generate a single sprite sheet for a top-down / slight-front-view shop merge game.
 
 Use the image-gen prompt template below:
 

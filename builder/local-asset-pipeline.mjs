@@ -94,7 +94,7 @@ function buildShopSheetPrompt(handshake) {
   const slotPlan = buildSheetSlotPlan(handshake);
   const slotLines = slotPlan.map(
     (slot) =>
-      `R${slot.row}C${slot.col} | ${slot.itemId} | semantic cue only: ${buildSheetSlotSemanticCue(slot)}`,
+      `R${slot.row}C${slot.col} | semantic cue only: ${buildSheetSlotSemanticCue(slot)}`,
   );
   return [
     prompt,
@@ -114,7 +114,7 @@ function buildShopSheetPrompt(handshake) {
     "Make every prop slightly smaller than the slot bounds to keep grid cutting safe.",
     "Tile slot plan, left to right and top to bottom:",
     ...slotLines,
-    "Solid pure white background only, isolated props, consistent magical shop style, no text.",
+    "Solid pure white background only, isolated props, consistent shop style, no text.",
   ]
     .filter(Boolean)
     .join("\n\n");
@@ -127,18 +127,18 @@ function buildSafeShopSheetPrompt(handshake) {
       botanical: "original base shop prop",
       alchemy: "original processed shop prop",
       curio: "original themed accent shop prop",
-      waste: "failed crafting residue",
+      waste: "failed shop residue",
       secret: "rare original hidden shop reward",
     };
-    const descriptor = chainDescriptorMap[slot.chainId] || "original fantasy prop";
-    return `R${slot.row}C${slot.col} | ${slot.itemId} | ${descriptor} | tier ${slot.tier} | semantic cue only: ${buildSheetSlotSemanticCue(slot)}`;
+    const descriptor = chainDescriptorMap[slot.chainId] || "original shop prop";
+    return `R${slot.row}C${slot.col} | ${descriptor} | tier ${slot.tier} | semantic cue only: ${buildSheetSlotSemanticCue(slot)}`;
   });
 
   return [
     "Generate a single sprite sheet for an original themed shop merge game.",
     "Use original shop props, original silhouettes, blank labels, and unbranded designs.",
     "Need a single coherent 4x8 sprite sheet for merge gameplay props.",
-    "Every tile slot matches the requested itemId exactly, in the listed order, with one prop per slot.",
+    "Every tile slot matches the requested item exactly, in the listed order, with one prop per slot.",
     "Slot notes are semantic guidance for choosing shapes, colors, and materials.",
     "All surfaces are blank and unbranded, with pictorial decoration only.",
     "If an item would normally include branding or printed packaging, replace it with blank unbranded surfaces and shape-only decoration.",
@@ -148,7 +148,7 @@ function buildSafeShopSheetPrompt(handshake) {
     "Make every prop slightly smaller than the slot bounds to keep grid cutting safe.",
     "Tile slot plan, left to right and top to bottom:",
     ...slotLines,
-    "Visual style: warm, handcrafted, whimsical fantasy shop props.",
+    "Visual style: warm, handcrafted, whimsical shop props.",
     "Solid pure white background only, isolated props, no text.",
   ].join("\n\n");
 }
@@ -164,6 +164,8 @@ function buildAssistantPrompt(handshake) {
     `Assistant name: ${concept.assistantName || ""}`,
     `Assistant role: ${concept.assistantRole || ""}`,
     `Assistant summary: ${concept.assistantSummary || ""}`,
+    "Do not add species, body features, technology, powers, factions, or genre elements that are not present in the shop idea, world, role, or summary.",
+    "For a real-world shop, use a believable shop worker outfit and grounded character design.",
     "One 16:9 sheet, 4 expressions in one horizontal row.",
     "Left to right order must be: smile, serious, angry, confused.",
     "Half-body portrait framing only, fully visible character in each panel.",
@@ -181,10 +183,12 @@ function buildSafeAssistantPrompt(handshake) {
   const roleText = normalizeText(concept.assistantRole) || "shop assistant";
   const summaryText = normalizeText(concept.assistantSummary) || "smart, reliable, warm helper";
   return [
-    "Design an original fantasy shop assistant character for a shop game.",
+    "Design an original shop assistant character for a shop game.",
     "Use an original character design with original clothing, silhouette, and accessories.",
     `Role focus: ${roleText}`,
     `Personality summary: ${summaryText}`,
+    "Do not add species, body features, technology, powers, factions, or genre elements that are not present in the role or personality summary.",
+    "For a real-world shop, use a believable shop worker outfit and grounded character design.",
     "Young original assistant, clever expression, readable silhouette, game-friendly design.",
     "One 16:9 sheet, 4 expressions in one horizontal row.",
     "Left to right order must be: smile, serious, angry, confused.",
@@ -215,7 +219,7 @@ function buildShopDecorStickerPrompt(handshake) {
 function buildSafeShopDecorStickerPrompt(handshake) {
   const concept = handshake?.concept || {};
   return [
-    "Generate a 2x3 sticker sheet for an original fantasy shop game.",
+    "Generate a 2x3 sticker sheet for an original shop game.",
     "Use original shop props, original silhouettes, blank labels, and unbranded designs.",
     `Shop idea: ${concept.shopIdea || "custom shop"}`,
     `Shop name: ${concept.shopName || "custom shop"}`,
@@ -244,7 +248,7 @@ function buildUiButtonStickerPrompt(handshake) {
 function buildSafeUiButtonStickerPrompt(handshake) {
   const concept = handshake?.concept || {};
   return [
-    "Generate a 1x5 horizontal sticker sheet for original fantasy shop game controls.",
+    "Generate a 1x5 horizontal sticker sheet for original shop game controls.",
     "Use original icon props, original silhouettes, blank labels, and unbranded designs.",
     `Shop idea: ${concept.shopIdea || "custom shop"}`,
     "Five slots left to right: lobby icon, collection book icon, favorites shelf icon, restart icon, trash icon.",
