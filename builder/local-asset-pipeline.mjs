@@ -12,6 +12,29 @@ function normalizeText(value) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+function sanitizeImagePromptForCompliance(prompt = "") {
+  return String(prompt || "")
+    .replace(/红色警戒2?|红警|Red\s*Alert/gi, "retro strategy game")
+    .replace(/前苏联|苏维埃|苏联/g, "retro faction")
+    .replace(/盟军/g, "blue faction")
+    .replace(/情报局|最高指挥部|指挥部/g, "command office")
+    .replace(/军需官/g, "supply manager")
+    .replace(/高级军官|军官|指挥官/g, "strategy shop manager")
+    .replace(/战场|前线|作战|战术|战争|军事/g, "strategy game")
+    .replace(/部队|兵员|兵种/g, "unit miniatures")
+    .replace(/战车|坦克|装甲载具/g, "armored vehicle model")
+    .replace(/战舰|舰船/g, "naval vehicle model")
+    .replace(/飞机/g, "air vehicle model")
+    .replace(/超级武器|武器|军械|火炮|导弹|枪|炮/g, "special equipment model")
+    .replace(/压倒性优势|投入战斗|部署|补充/g, "collection progress")
+    .replace(/基地/g, "strategy shop")
+    .replace(/阵营/g, "team")
+    .replace(/造价与性能参数/g, "catalog details")
+    .replace(/retro strategy game\s*主题商店/g, "retro strategy game themed shop")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -403,7 +426,14 @@ async function runNetaMakeImageOnce({ prompt, width, height, aspect }) {
 }
 
 async function runNetaMakeImage({ prompt, promptVariants = [], width, height, aspect }) {
-  const variants = [prompt, ...promptVariants].filter((item, index, array) => item && array.indexOf(item) === index);
+  const variants = [prompt, ...promptVariants]
+    .flatMap((item) => {
+      const normalized = normalizeText(item);
+      if (!normalized) return [];
+      const sanitized = sanitizeImagePromptForCompliance(normalized);
+      return sanitized && sanitized !== normalized ? [normalized, sanitized] : [normalized];
+    })
+    .filter((item, index, array) => item && array.indexOf(item) === index);
   let lastError = null;
 
   for (let index = 0; index < variants.length; index += 1) {
