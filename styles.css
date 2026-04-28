@@ -61,8 +61,8 @@
   --shop-button-bg-bottom: color-mix(in srgb, var(--shop-gold) 76%, var(--shop-border-dark));
   --shop-button-ink: color-mix(in srgb, var(--shop-ink) 84%, black 16%);
   --shop-secondary-bg: color-mix(in srgb, var(--shop-gold-soft) 48%, var(--shop-panel-2));
-  --shop-overlay: color-mix(in srgb, var(--shop-ink) 72%, transparent);
-  --shop-overlay-soft: color-mix(in srgb, var(--shop-border-dark) 46%, transparent);
+  --shop-overlay: color-mix(in srgb, var(--shop-ink) 84%, transparent);
+  --shop-overlay-soft: color-mix(in srgb, var(--shop-ink) 72%, transparent);
   --shop-error-bg: color-mix(in srgb, var(--shop-red) 18%, var(--shop-paper));
   --shop-success-bg: color-mix(in srgb, var(--shop-green) 20%, var(--shop-paper));
   --shop-focus-ring: color-mix(in srgb, var(--shop-green) 22%, transparent);
@@ -1105,7 +1105,7 @@ button {
 .sidebar {
   grid-area: side;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: minmax(190px, 0.42fr) minmax(0, 1fr);
   gap: 10px;
   min-height: 0;
   height: 100%;
@@ -1127,11 +1127,15 @@ button {
 }
 
 .assistant-panel {
-  height: auto;
+  min-height: 190px;
+  height: 100%;
   flex-shrink: 0;
 }
 
 .assistant-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   padding: 8px;
   border: 2px solid color-mix(in srgb, var(--shop-ink) 86%, transparent);
   border-radius: 18px;
@@ -1143,10 +1147,11 @@ button {
 
 .assistant-stage {
   display: grid;
-  grid-template-columns: 108px minmax(0, 1fr);
+  grid-template-columns: 124px minmax(0, 1fr);
   gap: 10px;
   align-items: stretch;
-  min-height: 132px;
+  flex: 1;
+  min-height: 164px;
 }
 
 .assistant-portrait-panel {
@@ -1174,8 +1179,8 @@ button {
 
 .assistant-portrait {
   display: grid;
-  width: 92px;
-  height: 92px;
+  width: 112px;
+  height: 112px;
   object-fit: contain;
   image-rendering: auto;
 }
@@ -1224,8 +1229,8 @@ button {
   margin: 0;
   color: var(--shop-ink);
   line-height: 1.4;
-  font-size: 12px;
-  min-height: 52px;
+  font-size: 13px;
+  min-height: 72px;
 }
 
 .assistant-line.typing::after {

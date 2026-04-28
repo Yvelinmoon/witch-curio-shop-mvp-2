@@ -646,6 +646,7 @@ class NetaLLMAdapter {
       `User shop idea: ${input.shopIdea}`,
       "Also return a theme object for the playable shop screen. Use only hex colors except shopLightSoft, which may be rgba().",
       "Theme keys: bgTop, bgBottom, paper, paperSoft, gold, shopBgTop, shopBgMid, shopBgBottom, shopLight, shopLightSoft, shopPanel, shopPanel2, shopPaper, shopPaperSoft, shopCard, shopCardDark, shopBorder, shopBorderDark, shopGold, shopGoldSoft, shopGreen, shopRed, shopText, shopInk, shopMuted.",
+      "Theme readability: text colors must clearly contrast with their panel, card, tab, button, dialogue bubble, modal, toast, and report backgrounds. Modal overlays should be dark and dim, not bright or washed out.",
       "Return compact JSON with keys: shopName, summary, assistantName, assistantRole, assistantSummary, loopSummary, confirmationLine, readySummary, theme.",
     ].join("\n\n");
 
@@ -1010,6 +1011,61 @@ function isSafeThemeColor(value) {
   return /^rgba?\(\s*(?:\d{1,3}\s*,\s*){2}\d{1,3}\s*(?:,\s*(?:0|1|0?\.\d+))?\s*\)$/.test(normalized);
 }
 
+function hexToRgb(value) {
+  const normalized = String(value || "").trim();
+  const match = normalized.match(/^#([0-9a-fA-F]{6})$/);
+  if (!match) return null;
+  const hex = match[1];
+  return {
+    r: Number.parseInt(hex.slice(0, 2), 16),
+    g: Number.parseInt(hex.slice(2, 4), 16),
+    b: Number.parseInt(hex.slice(4, 6), 16),
+  };
+}
+
+function getRelativeLuminance(color) {
+  const rgb = hexToRgb(color);
+  if (!rgb) return null;
+  const channel = (value) => {
+    const next = value / 255;
+    return next <= 0.03928 ? next / 12.92 : ((next + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * channel(rgb.r) + 0.7152 * channel(rgb.g) + 0.0722 * channel(rgb.b);
+}
+
+function getContrastRatio(foreground, background) {
+  const front = getRelativeLuminance(foreground);
+  const back = getRelativeLuminance(background);
+  if (front === null || back === null) return null;
+  const light = Math.max(front, back);
+  const dark = Math.min(front, back);
+  return (light + 0.05) / (dark + 0.05);
+}
+
+function pickReadableColor(background, dark = "#2b1a10", light = "#fff7e8") {
+  const darkContrast = getContrastRatio(dark, background) || 0;
+  const lightContrast = getContrastRatio(light, background) || 0;
+  return darkContrast >= lightContrast ? dark : light;
+}
+
+function ensureReadableColor(foreground, background, minRatio = 4.5) {
+  const ratio = getContrastRatio(foreground, background);
+  if (ratio === null || ratio >= minRatio) return foreground;
+  return pickReadableColor(background);
+}
+
+function normalizeThemeContrast(tokens) {
+  const next = { ...tokens };
+  const panelBg = next.shopPanel || next.paper || "#fff7e7";
+  const cardBg = next.shopCard || next.shopPaper || "#fffaf0";
+  const darkCardBg = next.shopCardDark || next.shopPanel2 || "#ead2a8";
+  next.shopText = ensureReadableColor(next.shopText, panelBg, 4.5);
+  next.shopInk = ensureReadableColor(next.shopInk, cardBg, 4.5);
+  next.shopMuted = ensureReadableColor(next.shopMuted, panelBg, 3.2);
+  next.shopGoldSoft = ensureReadableColor(next.shopGoldSoft, darkCardBg, 3.2);
+  return next;
+}
+
 function mergeThemeTokens(baseTheme, generatedTheme = {}) {
   const baseTokens = baseTheme?.tokens || {};
   const source = generatedTheme && typeof generatedTheme === "object" ? generatedTheme : {};
@@ -1025,10 +1081,11 @@ function mergeThemeTokens(baseTheme, generatedTheme = {}) {
   tokens.paper ||= tokens.shopPaper;
   tokens.paperSoft ||= tokens.shopPaperSoft;
   tokens.gold ||= tokens.shopGold;
+  const readableTokens = normalizeThemeContrast(tokens);
 
   return {
     eyebrow: coerceText(source.eyebrow, baseTheme?.eyebrow || "主题店铺"),
-    tokens,
+    tokens: readableTokens,
   };
 }
 

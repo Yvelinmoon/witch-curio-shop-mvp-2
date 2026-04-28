@@ -503,11 +503,12 @@ rebuildCatalogFromContentPack();
 function applyThemeTokens() {
   const theme = runtimeConfig.theme || {};
   const root = document.documentElement;
-  if (theme.bgTop) root.style.setProperty("--bg-top", theme.bgTop);
-  if (theme.bgBottom) root.style.setProperty("--bg-bottom", theme.bgBottom);
-  if (theme.paper) root.style.setProperty("--paper", theme.paper);
-  if (theme.paperSoft) root.style.setProperty("--paper-soft", theme.paperSoft);
-  if (theme.gold) root.style.setProperty("--gold", theme.gold);
+  const normalizedTheme = normalizeThemeContrast(theme);
+  if (normalizedTheme.bgTop) root.style.setProperty("--bg-top", normalizedTheme.bgTop);
+  if (normalizedTheme.bgBottom) root.style.setProperty("--bg-bottom", normalizedTheme.bgBottom);
+  if (normalizedTheme.paper) root.style.setProperty("--paper", normalizedTheme.paper);
+  if (normalizedTheme.paperSoft) root.style.setProperty("--paper-soft", normalizedTheme.paperSoft);
+  if (normalizedTheme.gold) root.style.setProperty("--gold", normalizedTheme.gold);
   const shopTokenMap = {
     shopBgTop: "--shop-bg-top",
     shopBgMid: "--shop-bg-mid",
@@ -531,8 +532,63 @@ function applyThemeTokens() {
     shopMuted: "--shop-muted",
   };
   Object.entries(shopTokenMap).forEach(([themeKey, cssVar]) => {
-    if (theme[themeKey]) root.style.setProperty(cssVar, theme[themeKey]);
+    if (normalizedTheme[themeKey]) root.style.setProperty(cssVar, normalizedTheme[themeKey]);
   });
+}
+
+function hexToRgb(value) {
+  const normalized = String(value || "").trim();
+  const match = normalized.match(/^#([0-9a-fA-F]{6})$/);
+  if (!match) return null;
+  const hex = match[1];
+  return {
+    r: parseInt(hex.slice(0, 2), 16),
+    g: parseInt(hex.slice(2, 4), 16),
+    b: parseInt(hex.slice(4, 6), 16),
+  };
+}
+
+function getRelativeLuminance(color) {
+  const rgb = hexToRgb(color);
+  if (!rgb) return null;
+  const channel = (value) => {
+    const next = value / 255;
+    return next <= 0.03928 ? next / 12.92 : ((next + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * channel(rgb.r) + 0.7152 * channel(rgb.g) + 0.0722 * channel(rgb.b);
+}
+
+function getContrastRatio(foreground, background) {
+  const front = getRelativeLuminance(foreground);
+  const back = getRelativeLuminance(background);
+  if (front === null || back === null) return null;
+  const light = Math.max(front, back);
+  const dark = Math.min(front, back);
+  return (light + 0.05) / (dark + 0.05);
+}
+
+function pickReadableColor(background, dark = "#2b1a10", light = "#fff7e8") {
+  const darkContrast = getContrastRatio(dark, background) || 0;
+  const lightContrast = getContrastRatio(light, background) || 0;
+  return darkContrast >= lightContrast ? dark : light;
+}
+
+function ensureReadableColor(foreground, background, minRatio = 4.5) {
+  const ratio = getContrastRatio(foreground, background);
+  if (ratio === null || ratio >= minRatio) return foreground;
+  return pickReadableColor(background);
+}
+
+function normalizeThemeContrast(theme) {
+  const next = { ...theme };
+  const panelBg = next.shopPanel || next.paper || "#fff7e7";
+  const cardBg = next.shopCard || next.shopPaper || "#fffaf0";
+  const darkCardBg = next.shopCardDark || next.shopPanel2 || "#ead2a8";
+  if (next.shopText) next.shopText = ensureReadableColor(next.shopText, panelBg, 4.5);
+  if (next.shopInk) next.shopInk = ensureReadableColor(next.shopInk, cardBg, 4.5);
+  if (next.shopMuted) next.shopMuted = ensureReadableColor(next.shopMuted, panelBg, 3.2);
+  if (next.shopGoldSoft) next.shopGoldSoft = ensureReadableColor(next.shopGoldSoft, darkCardBg, 3.2);
+  return next;
 }
 
 function refreshItemAssetUrls() {
