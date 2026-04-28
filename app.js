@@ -40,49 +40,45 @@ const DEFAULT_SHOP_THEME = {
   shopInk: "#3a2414",
   shopMuted: "#7f6a4d",
 };
-const DECOR_STORAGE_KEY = `${STORAGE_KEY}:shop_decor_positions_v4`;
+const DECOR_STORAGE_KEY = `${STORAGE_KEY}:shop_decor_positions_v5`;
+const DECOR_TRAY_LAYOUT = [
+  { left: 5.8, top: 70.5, width: 104 },
+  { left: 15.8, top: 70.5, width: 104 },
+  { left: 25.8, top: 70.5, width: 104 },
+  { left: 5.8, top: 84.2, width: 104 },
+  { left: 15.8, top: 84.2, width: 104 },
+  { left: 25.8, top: 84.2, width: 104 },
+];
 const SHOP_DECORATION_STICKERS = [
   {
     id: "wand-rack",
     url: "/generated/shop-stickers/ollivanders-decor/decor_01_wand-rack.png",
-    left: 5,
-    top: 68,
-    width: 192,
+    ...DECOR_TRAY_LAYOUT[0],
   },
   {
     id: "wand-box-shelf",
     url: "/generated/shop-stickers/ollivanders-decor/decor_02_wand-box-shelf.png",
-    left: 8,
-    top: 71,
-    width: 176,
+    ...DECOR_TRAY_LAYOUT[1],
   },
   {
     id: "shop-counter",
     url: "/generated/shop-stickers/ollivanders-decor/decor_03_shop-counter.png",
-    left: 11,
-    top: 74,
-    width: 192,
+    ...DECOR_TRAY_LAYOUT[2],
   },
   {
     id: "wand-display-case",
     url: "/generated/shop-stickers/ollivanders-decor/decor_04_wand-display-case.png",
-    left: 14,
-    top: 77,
-    width: 176,
+    ...DECOR_TRAY_LAYOUT[3],
   },
   {
     id: "wood-floor",
     url: "/generated/shop-stickers/ollivanders-decor/decor_05_wood-floor.png",
-    left: 17,
-    top: 80,
-    width: 176,
+    ...DECOR_TRAY_LAYOUT[4],
   },
   {
     id: "closed-door",
     url: "/generated/shop-stickers/ollivanders-decor/decor_06_closed-door.png",
-    left: 20,
-    top: 83,
-    width: 176,
+    ...DECOR_TRAY_LAYOUT[5],
   },
 ];
 
@@ -155,6 +151,14 @@ let decorDragState = null;
 let decorResizeState = null;
 let activeTickerText = "";
 let tickerHideTimer = null;
+
+function playSfx(name, options) {
+  window.ShopSfx?.play(name, options);
+}
+
+function playSfxSequence(names, delayMs) {
+  window.ShopSfx?.playSequence(names, delayMs);
+}
 
 const DEFAULT_SOURCE_CONFIGS = [
   {
@@ -341,24 +345,24 @@ const DEFAULT_DAILY_BLESSINGS = [
 
 const buildDefaultIntroSequence = () => [
   {
-    speaker: "旁白",
+    speaker: runtimeConfig.assistantName,
     text:
-      "作为这个世界的主人，你决定先把第一家店开起来。世界还在建设中，而一家稳定运转的小店，正是让资源和故事流动起来的开始。",
-  },
-  {
-    speaker: "旁白",
-    text:
-      `你先把店址定了下来。这里会不断接到零散但持续的小需求，只要店铺开起来，资源和故事就会开始流动。`,
+      "目标很简单：经营这家店，合成更高级的货，完成客人的委托，赚金币让店铺升级。",
   },
   {
     speaker: runtimeConfig.assistantName,
     text:
-      "我会先当你的店员助手，替你盯订单、整理补给，也会帮你判断今天该先进什么货。你只要把货物做对，这家店就能开始赚钱升级。",
+      "第一步，先看右侧委托。委托会告诉你客人想要什么货，确定目标后再去补给拿材料。",
   },
   {
-    speaker: "旁白",
+    speaker: runtimeConfig.assistantName,
     text:
-      "先别贪多。进第一批货，把两个相同物件往上合，再完成第一张订单。只要今天顺利开张，这家店往后就能无尽经营下去。",
+      "第二步，把两个相同物件拖到一起，它们会升级成下一档。越高级的货越值钱，也更容易完成订单。",
+  },
+  {
+    speaker: runtimeConfig.assistantName,
+    text:
+      "第三步，把委托需要的货交出去收金币。多余或没用的货可以拖到垃圾桶，先把第一单跑通。",
   },
 ];
 
@@ -428,6 +432,13 @@ let itemChains = contentPack.chains;
 let mixedRecipeConfigs = contentPack.recipes;
 let dailyBlessings = contentPack.blessings;
 let introSequence = contentPack.introSequence;
+
+const INTRO_RULES = [
+  { icon: "◇", title: "拿货", text: "点补给" },
+  { icon: "×2", title: "合成", text: "同物升级" },
+  { icon: "✓", title: "交单", text: "完成委托" },
+  { icon: "¢", title: "赚钱", text: "升级店铺" },
+];
 
 function createEmptyDailyStats(dayKey) {
   return {
@@ -530,10 +541,36 @@ function applyThemeTokens() {
     shopText: "--shop-text",
     shopInk: "--shop-ink",
     shopMuted: "--shop-muted",
+    shopOnPanel: "--shop-on-panel",
+    shopOnPaper: "--shop-on-paper",
+    shopOnCard: "--shop-on-card",
+    shopOnDark: "--shop-on-dark",
+    shopOnOrder: "--shop-on-order",
+    shopOnSource: "--shop-on-source",
+    shopOnButton: "--shop-on-button",
+    shopOnSecondary: "--shop-on-secondary",
+    shopOnBubble: "--shop-on-bubble",
+    shopOnWaste: "--shop-on-waste",
+    shopOnRare: "--shop-on-rare",
+    shopOnLegendary: "--shop-on-legendary",
+    shopOnError: "--shop-on-error",
+    shopOnSuccess: "--shop-on-success",
+    shopMutedOnPanel: "--shop-muted-on-panel",
+    shopMutedOnPaper: "--shop-muted-on-paper",
+    shopMutedOnCard: "--shop-muted-on-card",
+    shopMutedOnDark: "--shop-muted-on-dark",
+    shopMutedOnOrder: "--shop-muted-on-order",
+    shopMutedOnSource: "--shop-muted-on-source",
+    shopMutedOnBubble: "--shop-muted-on-bubble",
   };
   Object.entries(shopTokenMap).forEach(([themeKey, cssVar]) => {
     if (normalizedTheme[themeKey]) root.style.setProperty(cssVar, normalizedTheme[themeKey]);
   });
+  if (normalizedTheme.shopPlayPanelBase) root.style.setProperty("--shop-play-panel-base", normalizedTheme.shopPlayPanelBase);
+  if (normalizedTheme.shopPlayPanelBg) root.style.setProperty("--shop-play-panel-bg", normalizedTheme.shopPlayPanelBg);
+  if (normalizedTheme.shopPlayPanelInk) root.style.setProperty("--shop-play-panel-ink", normalizedTheme.shopPlayPanelInk);
+  if (normalizedTheme.shopTickerBg) root.style.setProperty("--shop-ticker-bg", normalizedTheme.shopTickerBg);
+  if (normalizedTheme.shopTickerInk) root.style.setProperty("--shop-ticker-ink", normalizedTheme.shopTickerInk);
 }
 
 function hexToRgb(value) {
@@ -579,15 +616,81 @@ function ensureReadableColor(foreground, background, minRatio = 4.5) {
   return pickReadableColor(background);
 }
 
+function rgbToHex({ r, g, b }) {
+  return `#${[r, g, b]
+    .map((channel) => Math.max(0, Math.min(255, Math.round(channel))).toString(16).padStart(2, "0"))
+    .join("")}`;
+}
+
+function mixThemeColor(colorA, colorB, percentA = 50) {
+  const a = hexToRgb(colorA);
+  const b = hexToRgb(colorB);
+  if (!a || !b) return colorA || colorB;
+  const ratioA = Math.max(0, Math.min(100, percentA)) / 100;
+  const ratioB = 1 - ratioA;
+  return rgbToHex({
+    r: a.r * ratioA + b.r * ratioB,
+    g: a.g * ratioA + b.g * ratioB,
+    b: a.b * ratioA + b.b * ratioB,
+  });
+}
+
 function normalizeThemeContrast(theme) {
   const next = { ...theme };
   const panelBg = next.shopPanel || next.paper || "#fff7e7";
+  const paperBg = next.shopPaper || next.paper || "#fff7e7";
   const cardBg = next.shopCard || next.shopPaper || "#fffaf0";
   const darkCardBg = next.shopCardDark || next.shopPanel2 || "#ead2a8";
-  if (next.shopText) next.shopText = ensureReadableColor(next.shopText, panelBg, 4.5);
-  if (next.shopInk) next.shopInk = ensureReadableColor(next.shopInk, cardBg, 4.5);
-  if (next.shopMuted) next.shopMuted = ensureReadableColor(next.shopMuted, panelBg, 3.2);
-  if (next.shopGoldSoft) next.shopGoldSoft = ensureReadableColor(next.shopGoldSoft, darkCardBg, 3.2);
+  const borderDark = next.shopBorderDark || "#4b3829";
+  const gold = next.shopGold || "#c78e2a";
+  const goldSoft = next.shopGoldSoft || "#e0bd72";
+  const green = next.shopGreen || "#6c8f4d";
+  const red = next.shopRed || "#b35b45";
+  const ink = next.shopInk || "#3a2414";
+  const darkCardMixed = mixThemeColor(borderDark, gold, 82);
+  const orderBg = mixThemeColor(cardBg, goldSoft, 70);
+  const sourceBg = mixThemeColor(darkCardMixed, gold, 82);
+  const playPanelBase = next.shopPlayPanelBase || mixThemeColor(next.shopPanel2 || panelBg, next.shopLight || panelBg, 86);
+  const playPanelBg = next.shopPlayPanelBg || `linear-gradient(180deg, ${mixThemeColor(next.shopPanel2 || panelBg, next.shopLight || panelBg, 86)}, ${panelBg})`;
+  const tickerBg = next.shopTickerBg || darkCardBg;
+  const buttonBg = mixThemeColor(gold, borderDark, 76);
+  const secondaryBg = mixThemeColor(goldSoft, next.shopPanel2 || panelBg, 48);
+  const bubbleBg = mixThemeColor(cardBg, goldSoft, 88);
+  const wasteBg = mixThemeColor(borderDark, "#000000", 86);
+  const rareBg = mixThemeColor(next.shopPaperSoft || paperBg, green, 78);
+  const legendaryBg = mixThemeColor(next.shopPaperSoft || paperBg, gold, 72);
+  const errorBg = mixThemeColor(red, paperBg, 18);
+  const successBg = mixThemeColor(green, paperBg, 20);
+  next.shopOnPanel = pickReadableColor(panelBg);
+  next.shopOnPaper = pickReadableColor(paperBg);
+  next.shopOnCard = pickReadableColor(cardBg);
+  next.shopOnDark = pickReadableColor(darkCardBg);
+  next.shopOnOrder = pickReadableColor(orderBg);
+  next.shopOnSource = pickReadableColor(sourceBg);
+  next.shopPlayPanelBase = playPanelBase;
+  next.shopPlayPanelBg = playPanelBg;
+  next.shopPlayPanelInk = pickReadableColor(playPanelBase);
+  next.shopTickerBg = tickerBg;
+  next.shopTickerInk = pickReadableColor(tickerBg);
+  next.shopOnButton = pickReadableColor(buttonBg);
+  next.shopOnSecondary = pickReadableColor(secondaryBg);
+  next.shopOnBubble = pickReadableColor(bubbleBg);
+  next.shopOnWaste = pickReadableColor(wasteBg);
+  next.shopOnRare = pickReadableColor(rareBg);
+  next.shopOnLegendary = pickReadableColor(legendaryBg);
+  next.shopOnError = pickReadableColor(errorBg);
+  next.shopOnSuccess = pickReadableColor(successBg);
+  next.shopMutedOnPanel = pickReadableColor(panelBg, "#6f5940", "#f4dfbf");
+  next.shopMutedOnPaper = pickReadableColor(paperBg, "#6f5940", "#f4dfbf");
+  next.shopMutedOnCard = pickReadableColor(cardBg, "#6f5940", "#f4dfbf");
+  next.shopMutedOnDark = pickReadableColor(darkCardBg, "#6f5940", "#f4dfbf");
+  next.shopMutedOnOrder = ensureReadableColor(mixThemeColor(next.shopOnOrder, gold, 80), orderBg, 3.2);
+  next.shopMutedOnSource = ensureReadableColor(mixThemeColor(next.shopOnSource, goldSoft, 78), sourceBg, 3.2);
+  next.shopMutedOnBubble = ensureReadableColor(mixThemeColor(next.shopOnBubble, gold, 82), bubbleBg, 3.2);
+  next.shopText = ensureReadableColor(next.shopText || next.shopOnPanel, panelBg, 4.5);
+  next.shopInk = ensureReadableColor(next.shopInk || next.shopOnPaper, paperBg, 4.5);
+  next.shopMuted = ensureReadableColor(next.shopMuted || next.shopMutedOnPanel, panelBg, 3.2);
+  if (next.shopGoldSoft) next.shopGoldSoft = ensureReadableColor(next.shopGoldSoft, mixThemeColor(ink, "#000000", 72), 3.2);
   return next;
 }
 
@@ -613,12 +716,13 @@ function mapDecorationManifest(manifest) {
   if (!stickers.length) return SHOP_DECORATION_STICKERS;
   return stickers.slice(0, 6).map((sticker, index) => {
     const fallback = SHOP_DECORATION_STICKERS[index] || SHOP_DECORATION_STICKERS[0];
+    const trayPosition = DECOR_TRAY_LAYOUT[index] || fallback;
     return {
       id: sticker.id || fallback.id,
       url: sticker.url || fallback.url,
-      left: Number.isFinite(sticker.defaultLeft) ? sticker.defaultLeft : fallback.left,
-      top: Number.isFinite(sticker.defaultTop) ? sticker.defaultTop : fallback.top,
-      width: Number.isFinite(sticker.defaultWidth) ? sticker.defaultWidth : fallback.width,
+      left: trayPosition.left,
+      top: trayPosition.top,
+      width: trayPosition.width,
     };
   });
 }
@@ -761,7 +865,6 @@ const elements = {
   introSpeaker: document.getElementById("introSpeaker"),
   introText: document.getElementById("introText"),
   introStep: document.getElementById("introStep"),
-  introSkip: document.getElementById("introSkip"),
   introNext: document.getElementById("introNext"),
   reportOverlay: document.getElementById("reportOverlay"),
   reportDayLabel: document.getElementById("reportDayLabel"),
@@ -835,14 +938,15 @@ document.querySelectorAll("#libraryTabs [data-library-view]").forEach((button) =
 elements.openShelfButton.addEventListener("click", () => openLibrary("shelf"));
 elements.openCodexButton.addEventListener("click", () => openLibrary("codex"));
 elements.openHallButton.addEventListener("click", () => {
+  playSfx("invalid");
   showToast("大厅即将上线", "即将上线，敬请期待。");
 });
 elements.trashBin.addEventListener("click", () => {
+  playSfx("invalid");
   showToast("垃圾桶", "把废料或多余材料拖到这里，就能腾出工作台空位。");
 });
 elements.closeLibraryButton.addEventListener("click", closeLibrary);
 
-elements.introSkip.addEventListener("click", finishIntro);
 elements.introNext.addEventListener("click", advanceIntro);
 elements.closeReportButton.addEventListener("click", closeReportOverlay);
 elements.closeItemDetailButton.addEventListener("click", closeItemDetailOverlay);
@@ -1097,17 +1201,24 @@ function renderShopDecorations() {
   const nextKey = JSON.stringify({ stickers: decorationStickers, savedPositions });
   if (nextKey === shopDecorationKey) return;
   shopDecorationKey = nextKey;
+  const hasSavedPositions = Object.keys(savedPositions).length > 0;
 
-  elements.shopDecorations.innerHTML = decorationStickers
+  elements.shopDecorations.innerHTML = `
+    <div class="shop-decor-tray${hasSavedPositions ? " is-customized" : ""}" aria-hidden="true">
+      <strong>装饰贴纸</strong>
+      <span>拖到店里摆放，角标可缩放</span>
+    </div>
+  ${decorationStickers
     .map(
       (sticker, index) => {
         const position = savedPositions[sticker.id] || sticker;
+        const decorZ = getDecorZIndex(position.top, index);
         return `
         <button
           class="shop-decor-sticker shop-decor-sticker-${index + 1}"
           type="button"
           data-decor-id="${sticker.id}"
-          style="--decor-left: ${position.left}%; --decor-top: ${position.top}%; --decor-width: ${position.width}px;"
+          style="--decor-left: ${position.left}%; --decor-top: ${position.top}%; --decor-width: ${position.width}px; --decor-z: ${decorZ};"
           aria-label="移动店铺装饰"
         >
           <img src="${sticker.url}" alt="" draggable="false" />
@@ -1116,7 +1227,7 @@ function renderShopDecorations() {
       `;
       },
     )
-    .join("");
+    .join("")}`;
 
   elements.shopDecorations.querySelectorAll("[data-decor-id]").forEach((button) => {
     button.addEventListener("pointerdown", handleDecorPointerDown);
@@ -1125,6 +1236,11 @@ function renderShopDecorations() {
 
 function clampNumber(value, min, max) {
   return Math.max(min, Math.min(max, value));
+}
+
+function getDecorZIndex(topPercent, index = 0) {
+  const top = clampNumber(Number.parseFloat(topPercent) || 0, -10, 92);
+  return 20 + Math.round((top + 10) * 10) + index;
 }
 
 function getDecorMaxWidth() {
@@ -1246,6 +1362,7 @@ function handleDecorPointerMove(event) {
   const nextTop = Math.max(-10, Math.min(92, top));
   target.style.setProperty("--decor-left", `${nextLeft}%`);
   target.style.setProperty("--decor-top", `${nextTop}%`);
+  target.style.setProperty("--decor-z", String(getDecorZIndex(nextTop)));
 }
 
 function handleDecorPointerUp() {
@@ -1272,8 +1389,10 @@ function setPanelTab(side, tab) {
 }
 
 function renderPanelTabs() {
+  const orderReady = canFulfillOrder(state.order);
   document.querySelectorAll("#leftTabs [data-panel-tab]").forEach((button) => {
     button.classList.toggle("active", button.dataset.panelTab === activeLeftTab);
+    button.classList.toggle("has-alert", button.dataset.panelTab === "orders" && orderReady);
   });
   document.querySelectorAll(".panel-left [data-panel-view]").forEach((panel) => {
     panel.classList.toggle("active", panel.dataset.panelView === activeLeftTab);
@@ -1297,9 +1416,16 @@ function renderIntro() {
   }
   elements.introSpeaker.textContent = step.speaker;
   elements.introText.textContent = step.text;
+  const ruleStrip = document.getElementById("introRuleStrip");
+  if (ruleStrip) {
+    ruleStrip.innerHTML = INTRO_RULES.map((rule, index) => {
+      const active = index === Math.min(introStepIndex, INTRO_RULES.length - 1);
+      return `<div class="intro-rule${active ? " active" : ""}"><b>${rule.icon}</b><strong>${rule.title}</strong><span>${rule.text}</span></div>`;
+    }).join("");
+  }
   elements.introStep.textContent = `${introStepIndex + 1} / ${introSequence.length}`;
   elements.introNext.textContent =
-    introStepIndex === introSequence.length - 1 ? "开始整理" : "下一句";
+    introStepIndex === introSequence.length - 1 ? "开始营业" : "下一步";
 }
 
 function openLibrary(view) {
@@ -2044,6 +2170,7 @@ function handleGlobalPointerMove(event) {
 
   if (!dragState.dragging && distance > DRAG_START_DISTANCE_PX) {
     dragState.dragging = true;
+    playSfx("pickup");
     logDragDebug("custom-drag-start", event, {
       sourceIndex: dragState.sourceIndex,
       distance,
@@ -2084,6 +2211,7 @@ function handleGlobalPointerUp(event) {
   }
 
   if (targetIndex === null || targetIndex === sourceIndex) {
+    playSfx("invalid");
     renderBoard();
     return;
   }
@@ -2102,6 +2230,7 @@ function applyBoardAction(sourceIndex, targetIndex) {
     selectedCell = null;
     persistState();
     render();
+    playSfx("drop");
     return;
   }
 
@@ -2115,6 +2244,7 @@ function applyBoardAction(sourceIndex, targetIndex) {
   selectedCell = null;
   persistState();
   render();
+  playSfx("drop");
 }
 
 function createDragGhost(sourceIndex) {
@@ -2210,6 +2340,7 @@ function discardBoardItem(index) {
   });
   persistState();
   render();
+  playSfx(item.chainId === "waste" ? "drop" : "invalid");
   showToast(
     item.chainId === "waste" ? "废料已清理" : "材料已丢弃",
     item.chainId === "waste"
@@ -2345,6 +2476,15 @@ function mergeItems(sourceIndex, targetIndex) {
   }
   persistState();
   render();
+  if (mergePlan.mode === "recipe") {
+    playSfxSequence(["merge3", "sparkle", "unlock"], 70);
+  } else if (mergePlan.mode === "waste") {
+    playSfx("invalid");
+  } else if (resultItem.tier >= 4) {
+    playSfxSequence(["merge2", "sparkle"], 62);
+  } else {
+    playSfx("merge1");
+  }
   showToast(mergePlan.toastTitle, mergePlan.toastBody || `你做出了「${itemIndex[resultItemId].name}」`);
 }
 
@@ -2356,6 +2496,7 @@ function registerDiscovery(itemId) {
     if (itemIndex[itemId].rare) {
       addShelfItem(itemId);
     }
+    playSfx("unlock");
     showToast("发现新物件", `「${itemIndex[itemId].name}」已加入收集册`);
     return;
   }
@@ -2387,6 +2528,7 @@ function conjureFromSource(sourceId) {
       status: "店铺状态：补货被卡住",
     });
     renderAssistant();
+    playSfx("invalid");
     showToast("金币不够", `${sourceConfig.name} 每次补货需要 ${sourceConfig.cost} 金币。`);
     return;
   }
@@ -2401,6 +2543,7 @@ function conjureFromSource(sourceId) {
       status: "店铺状态：台面拥堵",
     });
     renderAssistant();
+    playSfx("invalid");
     showToast("工作台满了", "先挪一挪或合成一下，再继续补货。");
     return;
   }
@@ -2445,6 +2588,7 @@ function conjureFromSource(sourceId) {
 
   persistState();
   render();
+  playSfx("drop");
 }
 
 function rushSourceCharge(sourceId) {
@@ -2462,6 +2606,7 @@ function rushSourceCharge(sourceId) {
       status: "店铺状态：储备充足",
     });
     renderAssistant();
+    playSfx("invalid");
     showToast("次数已满", `${sourceConfig.name} 现在已经是满补货状态。`);
     return;
   }
@@ -2476,6 +2621,7 @@ function rushSourceCharge(sourceId) {
       status: "店铺状态：加急失败",
     });
     renderAssistant();
+    playSfx("invalid");
     showToast("金币不够", `加急恢复 ${sourceConfig.name} 需要 ${refreshCost} 金币。`);
     return;
   }
@@ -2494,6 +2640,7 @@ function rushSourceCharge(sourceId) {
   });
   persistState();
   render();
+  playSfx("coin");
   showToast("加急补货", `${sourceConfig.name} 立即恢复了 1 次补货机会。`);
 }
 
@@ -2506,7 +2653,10 @@ function canFulfillOrder(order) {
 }
 
 function fulfillOrder() {
-  if (!canFulfillOrder(state.order)) return;
+  if (!canFulfillOrder(state.order)) {
+    playSfx("invalid");
+    return;
+  }
 
   const rewardGold = state.order.rewardGold;
   const rewardXp = state.order.rewardXp;
@@ -2533,6 +2683,7 @@ function fulfillOrder() {
   if (currentLevel > previousLevel) {
     unlockSourcesForLevel(currentLevel);
     state.dailyStats.upgradesGained += currentLevel - previousLevel;
+    playSfx("level");
     showToast("店铺升级", `已升到 ${currentLevel} 级，新区域可能已经解锁。`);
   }
 
@@ -2558,6 +2709,7 @@ function fulfillOrder() {
     focus: "今日重点：续上下一张委托",
     status: currentLevel > previousLevel ? `店铺状态：已升到 ${currentLevel} 级` : "店铺状态：委托已完成",
   });
+  playSfxSequence(["coin", "sparkle"], 70);
   showToast("委托完成", `${state.order.client.name} 很满意，你收到 ${rewardGold} 金币。`);
   state.order = createOrder({
     completedOrders: state.completedOrders,
@@ -2583,6 +2735,7 @@ function refreshOrder() {
       status: "店铺状态：无法刷新委托",
     });
     renderAssistant();
+    playSfx("invalid");
     showToast("金币不够", "刷新委托需要 6 金币。");
     return;
   }
@@ -2603,6 +2756,7 @@ function refreshOrder() {
   });
   persistState();
   render();
+  playSfx("coin");
 }
 
 function unlockSourcesForLevel(level) {

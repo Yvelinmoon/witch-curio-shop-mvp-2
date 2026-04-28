@@ -249,10 +249,10 @@ function buildStaticContentPack(concept = {}) {
       },
     ],
     introSequence: [
-      { speaker: "旁白", text: `世界还在建设，${shopName}会先成为资源和需求汇流的第一站。` },
-      { speaker: "旁白", text: "这里会不断接到零散但持续的小需求，适合用经营循环把世界慢慢跑起来。" },
-      { speaker: assistantName, text: "我会先帮你盯订单、补给和今天的重点，把店面的节奏先带稳。" },
-      { speaker: "旁白", text: "先补第一批货，再做出第一单。只要能顺利开张，这家店就能继续无尽经营下去。" },
+      { speaker: assistantName, text: `店主，${shopName}已经开门了。玩法很简单：拿货、合成、交单、赚钱升级。` },
+      { speaker: assistantName, text: "先看右侧委托需要什么，再点补给拿第一批货。补给次数有限，别急着乱点。" },
+      { speaker: assistantName, text: "把两个一样的物件拖到一起，它们会升级成下一档。越高级的货越容易完成委托。" },
+      { speaker: assistantName, text: "委托完成后会拿到金币。多余或没用的货，可以拖到垃圾桶清掉。" },
     ],
   };
 }
@@ -331,6 +331,9 @@ function buildMetaContentPackPrompt(input = {}, concept = {}) {
     "clients count fixed: 5",
     "blessings count fixed: 3. Do not include internal ids.",
     "introSequence count fixed: 4",
+    "introSequence speakers should be the assistant name. Do not use narrator prose.",
+    "introSequence must explain gameplay rules in the assistant's voice.",
+    "introSequence should cover: 1) take goods from supply, 2) merge two identical goods to upgrade, 3) fulfill commissions, 4) earn coins and clear useless goods with trash.",
     "All visible names and descriptions prioritize the user's shop theme first.",
     "The world setting is only flavor overlay and story framing.",
     "Output only the JSON object.",
@@ -1067,15 +1070,73 @@ function ensureReadableColor(foreground, background, minRatio = 4.5) {
   return pickReadableColor(background);
 }
 
+function rgbToHex({ r, g, b }) {
+  return `#${[r, g, b]
+    .map((channel) => Math.max(0, Math.min(255, Math.round(channel))).toString(16).padStart(2, "0"))
+    .join("")}`;
+}
+
+function mixThemeColor(colorA, colorB, percentA = 50) {
+  const a = hexToRgb(colorA);
+  const b = hexToRgb(colorB);
+  if (!a || !b) return colorA || colorB;
+  const ratioA = Math.max(0, Math.min(100, percentA)) / 100;
+  const ratioB = 1 - ratioA;
+  return rgbToHex({
+    r: a.r * ratioA + b.r * ratioB,
+    g: a.g * ratioA + b.g * ratioB,
+    b: a.b * ratioA + b.b * ratioB,
+  });
+}
+
 function normalizeThemeContrast(tokens) {
   const next = { ...tokens };
   const panelBg = next.shopPanel || next.paper || "#fff7e7";
+  const paperBg = next.shopPaper || next.paper || "#fff7e7";
   const cardBg = next.shopCard || next.shopPaper || "#fffaf0";
   const darkCardBg = next.shopCardDark || next.shopPanel2 || "#ead2a8";
-  next.shopText = ensureReadableColor(next.shopText, panelBg, 4.5);
-  next.shopInk = ensureReadableColor(next.shopInk, cardBg, 4.5);
-  next.shopMuted = ensureReadableColor(next.shopMuted, panelBg, 3.2);
-  next.shopGoldSoft = ensureReadableColor(next.shopGoldSoft, darkCardBg, 3.2);
+  const borderDark = next.shopBorderDark || "#4b3829";
+  const gold = next.shopGold || "#c78e2a";
+  const goldSoft = next.shopGoldSoft || "#e0bd72";
+  const green = next.shopGreen || "#6c8f4d";
+  const red = next.shopRed || "#b35b45";
+  const ink = next.shopInk || "#3a2414";
+  const darkCardMixed = mixThemeColor(borderDark, gold, 82);
+  const orderBg = mixThemeColor(cardBg, goldSoft, 70);
+  const sourceBg = mixThemeColor(darkCardMixed, gold, 82);
+  const buttonBg = mixThemeColor(gold, borderDark, 76);
+  const secondaryBg = mixThemeColor(goldSoft, next.shopPanel2 || panelBg, 48);
+  const bubbleBg = mixThemeColor(cardBg, goldSoft, 88);
+  const wasteBg = mixThemeColor(borderDark, "#000000", 86);
+  const rareBg = mixThemeColor(next.shopPaperSoft || paperBg, green, 78);
+  const legendaryBg = mixThemeColor(next.shopPaperSoft || paperBg, gold, 72);
+  const errorBg = mixThemeColor(red, paperBg, 18);
+  const successBg = mixThemeColor(green, paperBg, 20);
+  next.shopOnPanel = pickReadableColor(panelBg);
+  next.shopOnPaper = pickReadableColor(paperBg);
+  next.shopOnCard = pickReadableColor(cardBg);
+  next.shopOnDark = pickReadableColor(darkCardBg);
+  next.shopOnOrder = pickReadableColor(orderBg);
+  next.shopOnSource = pickReadableColor(sourceBg);
+  next.shopOnButton = pickReadableColor(buttonBg);
+  next.shopOnSecondary = pickReadableColor(secondaryBg);
+  next.shopOnBubble = pickReadableColor(bubbleBg);
+  next.shopOnWaste = pickReadableColor(wasteBg);
+  next.shopOnRare = pickReadableColor(rareBg);
+  next.shopOnLegendary = pickReadableColor(legendaryBg);
+  next.shopOnError = pickReadableColor(errorBg);
+  next.shopOnSuccess = pickReadableColor(successBg);
+  next.shopMutedOnPanel = pickReadableColor(panelBg, "#6f5940", "#f4dfbf");
+  next.shopMutedOnPaper = pickReadableColor(paperBg, "#6f5940", "#f4dfbf");
+  next.shopMutedOnCard = pickReadableColor(cardBg, "#6f5940", "#f4dfbf");
+  next.shopMutedOnDark = pickReadableColor(darkCardBg, "#6f5940", "#f4dfbf");
+  next.shopMutedOnOrder = ensureReadableColor(mixThemeColor(next.shopOnOrder, gold, 80), orderBg, 3.2);
+  next.shopMutedOnSource = ensureReadableColor(mixThemeColor(next.shopOnSource, goldSoft, 78), sourceBg, 3.2);
+  next.shopMutedOnBubble = ensureReadableColor(mixThemeColor(next.shopOnBubble, gold, 82), bubbleBg, 3.2);
+  next.shopText = ensureReadableColor(next.shopText || next.shopOnPanel, panelBg, 4.5);
+  next.shopInk = ensureReadableColor(next.shopInk || next.shopOnPaper, paperBg, 4.5);
+  next.shopMuted = ensureReadableColor(next.shopMuted || next.shopMutedOnPanel, panelBg, 3.2);
+  next.shopGoldSoft = ensureReadableColor(next.shopGoldSoft, mixThemeColor(ink, "#000000", 72), 3.2);
   return next;
 }
 
@@ -1660,10 +1721,64 @@ function emitStage(job, label, text, status = "done") {
   });
 }
 
+function describeBuildFailure(error = "") {
+  const raw = String(error || "");
+  if (/code:\s*['"]?432|电量值不足|insufficient/i.test(raw)) {
+    return {
+      code: "paint_supply_unavailable",
+      title: "画材没送到",
+      reason: "这轮还需要继续生成图片，但画材通道暂时没有接上。",
+      advice: "确认画材通道后，按原方案重试即可继续；不用重写店铺设定。",
+      retryable: true,
+    };
+  }
+  if (/451|不合规|compliance/i.test(raw)) {
+    return {
+      code: "image_prompt_rejected",
+      title: "图样被退回",
+      reason: "这轮图片描述里有词被画师退回，店铺准备停在生图阶段。",
+      advice: "可以在输入框里写一句更温和的替代表达，再带建议重试。",
+      retryable: true,
+    };
+  }
+  if (/Remote LLM timeout|timeout/i.test(raw)) {
+    return {
+      code: "reply_timeout",
+      title: "回信太慢",
+      reason: "开店回信超过等待时间，店铺准备暂时停住。",
+      advice: "可以直接重试；如果连续卡住，可以把店铺设定写得更短一点。",
+      retryable: true,
+    };
+  }
+  if (/non-JSON|JSON/i.test(raw)) {
+    return {
+      code: "letter_format_broken",
+      title: "开店信格式乱了",
+      reason: "回信没有整理成可用清单，店员暂时无法照单准备。",
+      advice: "可以直接重试，或在输入框里补一句“请按清单格式整理”。",
+      retryable: true,
+    };
+  }
+  return {
+    code: "build_failed",
+    title: "开张准备卡住了",
+    reason: "这轮开店准备没有顺利完成。",
+    advice: "可以问店员发生了什么，也可以直接重试；想改方向就先写一句建议。",
+    retryable: true,
+  };
+}
+
+function sanitizeWorkerErrorForClient(error = "") {
+  const failure = describeBuildFailure(error);
+  return failure.reason || "这轮开店准备没有顺利完成。";
+}
+
 function emitFailed(job, error) {
+  const failure = describeBuildFailure(error);
   emitJobEvent(job, {
     type: "failed",
     error,
+    failure,
   });
 }
 
@@ -1883,8 +1998,8 @@ function buildAgentHandshakePayload(job) {
             required: true,
           },
           {
-            id: "assistant_sheet_1x4",
-            path: path.join(artifactDir, "assistant_sheet_1x4.png"),
+            id: "assistant_sheet_2x2",
+            path: path.join(artifactDir, "assistant_sheet_2x2.png"),
             kind: "image",
             required: true,
           },
@@ -1947,7 +2062,7 @@ function buildAgentHandshakePayload(job) {
       ],
       blockingRequirements: [
         "shop_sheet_4x8.png",
-        "assistant_sheet_1x4.png",
+        "assistant_sheet_2x2.png",
         "assistant_portraits/manifest.json",
         "tiles/manifest.json",
       ],
@@ -2451,14 +2566,16 @@ const server = createServer(async (request, response) => {
       const status = await updateLocalAgentStatus(jobId, {
         state: "failed",
         failedAt: new Date().toISOString(),
-        error: body.error || "开张准备卡住了",
+        error: sanitizeWorkerErrorForClient(body.error || "开张准备卡住了"),
+        rawError: body.error || "",
+        failure: describeBuildFailure(body.error || "开张准备卡住了"),
       });
       if (job) {
-        emitFailed(job, status.error);
+        emitFailed(job, status.rawError || status.error);
         appLog("ERROR", "[agent] fail-summary", summarizeAgentExecution(job, null, {
           status: "failed",
           claimedBy: status.claimedBy || null,
-          error: status.error || "开张准备卡住了",
+          error: status.rawError || status.error || "开张准备卡住了",
         }));
       }
       sendJson(response, 200, { ok: true, status });

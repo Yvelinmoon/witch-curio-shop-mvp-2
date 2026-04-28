@@ -9,6 +9,8 @@
   const BUILD_COMPLETION_POLL_INTERVAL_MS = 1800;
   const SAVE_KEY = window.__SHOP_SAVE_KEY__ || "witch-curio_shop_mvp_v5_builder";
   const ARCHIVE_PREFIX = `${SAVE_KEY}:archive:`;
+  const PENDING_IDEA_KEY = `${SAVE_KEY}:pending_shop_idea`;
+  const PENDING_CONCEPT_AFTER_AUTH_KEY = `${SAVE_KEY}:pending_concept_after_auth`;
   const DEFAULT_CREATOR_THEME = {
     bgTop: "#faefc9",
     bgBottom: "#d7b57c",
@@ -108,12 +110,12 @@
     loadingChatInput: document.getElementById("loadingChatInput"),
     loadingInputRow: document.getElementById("loadingInputRow"),
     sendLoadingChatButton: document.getElementById("sendLoadingChatButton"),
-    buildRecoveryRow: document.getElementById("buildRecoveryRow"),
-    retryBuildButton: document.getElementById("retryBuildButton"),
-    reviseBuildButton: document.getElementById("reviseBuildButton"),
     buildActionRow: document.getElementById("buildActionRow"),
     enterShopButton: document.getElementById("enterShopButton"),
     rebuildShopButton: document.getElementById("rebuildShopButton"),
+    authPrompt: document.getElementById("creatorAuthPrompt"),
+    confirmAuthPromptButton: document.getElementById("confirmAuthPromptButton"),
+    cancelAuthPromptButton: document.getElementById("cancelAuthPromptButton"),
     netaAuthStatus: document.getElementById("netaAuthStatus"),
     netaAuthHint: document.getElementById("netaAuthHint"),
     creatorAgentHint: document.getElementById("creatorAgentHint"),
@@ -145,6 +147,9 @@
     agentMeta: null,
     portraitReady: false,
     portraitLoadingActive: false,
+    authResumeAttempted: false,
+    pendingAuthShopIdea: "",
+    lastBuildIssue: null,
   };
 
   if (!elements.page || !elements.appShell) return;
@@ -312,15 +317,84 @@
     return pickReadableColor(background);
   }
 
+  function hexToRgb(color) {
+    const match = String(color || "").trim().match(/^#([0-9a-fA-F]{6})$/);
+    if (!match) return null;
+    const value = Number.parseInt(match[1], 16);
+    return {
+      r: (value >> 16) & 255,
+      g: (value >> 8) & 255,
+      b: value & 255,
+    };
+  }
+
+  function rgbToHex({ r, g, b }) {
+    return `#${[r, g, b]
+      .map((channel) => Math.max(0, Math.min(255, Math.round(channel))).toString(16).padStart(2, "0"))
+      .join("")}`;
+  }
+
+  function mixThemeColor(colorA, colorB, percentA = 50) {
+    const a = hexToRgb(colorA);
+    const b = hexToRgb(colorB);
+    if (!a || !b) return colorA || colorB;
+    const ratioA = Math.max(0, Math.min(100, percentA)) / 100;
+    const ratioB = 1 - ratioA;
+    return rgbToHex({
+      r: a.r * ratioA + b.r * ratioB,
+      g: a.g * ratioA + b.g * ratioB,
+      b: a.b * ratioA + b.b * ratioB,
+    });
+  }
+
   function normalizeThemeContrast(tokens) {
     const next = { ...tokens };
     const panelBg = next.shopPanel || next.paper || DEFAULT_CREATOR_THEME.shopPanel;
+    const paperBg = next.shopPaper || next.paper || DEFAULT_CREATOR_THEME.shopPaper;
     const cardBg = next.shopCard || next.shopPaper || DEFAULT_CREATOR_THEME.shopCard;
     const darkCardBg = next.shopCardDark || next.shopPanel2 || DEFAULT_CREATOR_THEME.shopCardDark;
-    next.shopText = ensureReadableColor(next.shopText, panelBg, 4.5);
-    next.shopInk = ensureReadableColor(next.shopInk, cardBg, 4.5);
-    next.shopMuted = ensureReadableColor(next.shopMuted, panelBg, 3.2);
-    next.shopGoldSoft = ensureReadableColor(next.shopGoldSoft, darkCardBg, 3.2);
+    const borderDark = next.shopBorderDark || DEFAULT_CREATOR_THEME.shopBorderDark;
+    const gold = next.shopGold || DEFAULT_CREATOR_THEME.shopGold;
+    const goldSoft = next.shopGoldSoft || DEFAULT_CREATOR_THEME.shopGoldSoft;
+    const green = next.shopGreen || DEFAULT_CREATOR_THEME.shopGreen;
+    const red = next.shopRed || DEFAULT_CREATOR_THEME.shopRed;
+    const ink = next.shopInk || DEFAULT_CREATOR_THEME.shopInk;
+    const darkCardMixed = mixThemeColor(borderDark, gold, 82);
+    const orderBg = mixThemeColor(cardBg, goldSoft, 70);
+    const sourceBg = mixThemeColor(darkCardMixed, gold, 82);
+    const buttonBg = mixThemeColor(gold, borderDark, 76);
+    const secondaryBg = mixThemeColor(goldSoft, next.shopPanel2 || panelBg, 48);
+    const bubbleBg = mixThemeColor(cardBg, goldSoft, 88);
+    const wasteBg = mixThemeColor(borderDark, "#000000", 86);
+    const rareBg = mixThemeColor(next.shopPaperSoft || paperBg, green, 78);
+    const legendaryBg = mixThemeColor(next.shopPaperSoft || paperBg, gold, 72);
+    const errorBg = mixThemeColor(red, paperBg, 18);
+    const successBg = mixThemeColor(green, paperBg, 20);
+    next.shopOnPanel = pickReadableColor(panelBg);
+    next.shopOnPaper = pickReadableColor(paperBg);
+    next.shopOnCard = pickReadableColor(cardBg);
+    next.shopOnDark = pickReadableColor(darkCardBg);
+    next.shopOnOrder = pickReadableColor(orderBg);
+    next.shopOnSource = pickReadableColor(sourceBg);
+    next.shopOnButton = pickReadableColor(buttonBg);
+    next.shopOnSecondary = pickReadableColor(secondaryBg);
+    next.shopOnBubble = pickReadableColor(bubbleBg);
+    next.shopOnWaste = pickReadableColor(wasteBg);
+    next.shopOnRare = pickReadableColor(rareBg);
+    next.shopOnLegendary = pickReadableColor(legendaryBg);
+    next.shopOnError = pickReadableColor(errorBg);
+    next.shopOnSuccess = pickReadableColor(successBg);
+    next.shopMutedOnPanel = pickReadableColor(panelBg, "#6f5940", "#f4dfbf");
+    next.shopMutedOnPaper = pickReadableColor(paperBg, "#6f5940", "#f4dfbf");
+    next.shopMutedOnCard = pickReadableColor(cardBg, "#6f5940", "#f4dfbf");
+    next.shopMutedOnDark = pickReadableColor(darkCardBg, "#6f5940", "#f4dfbf");
+    next.shopMutedOnOrder = ensureReadableColor(mixThemeColor(next.shopOnOrder, gold, 80), orderBg, 3.2);
+    next.shopMutedOnSource = ensureReadableColor(mixThemeColor(next.shopOnSource, goldSoft, 78), sourceBg, 3.2);
+    next.shopMutedOnBubble = ensureReadableColor(mixThemeColor(next.shopOnBubble, gold, 82), bubbleBg, 3.2);
+    next.shopText = ensureReadableColor(next.shopText || next.shopOnPanel, panelBg, 4.5);
+    next.shopInk = ensureReadableColor(next.shopInk || next.shopOnPaper, paperBg, 4.5);
+    next.shopMuted = ensureReadableColor(next.shopMuted || next.shopMutedOnPanel, panelBg, 3.2);
+    next.shopGoldSoft = ensureReadableColor(next.shopGoldSoft, mixThemeColor(ink, "#000000", 72), 3.2);
     return next;
   }
 
@@ -650,20 +724,49 @@
   }
 
   function renderBuildProgress() {
-    if (!elements.buildProgressSteps || !elements.buildProgressFill || !elements.buildProgressMeta) return;
+    if (!elements.buildProgressFill || !elements.buildProgressMeta) return;
     const snapshot = getBuildProgressSnapshot();
     elements.buildProgressMeta.textContent = snapshot.metaText;
     elements.buildProgressFill.style.width = `${snapshot.fillPercent}%`;
-    let lastCompletedStep = null;
-    snapshot.steps.forEach((step) => {
-      if (step.status === "completed") lastCompletedStep = step;
-    });
-    const activeStep = snapshot.steps.find((step) => step.status === "current" || step.status === "blocked" || step.status === "failed")
-      || lastCompletedStep
-      || snapshot.steps[0];
-    elements.buildProgressSteps.innerHTML = activeStep
-      ? `<span class="creator-build-progress-label is-${activeStep.status}">${activeStep.label}</span>`
-      : "";
+    if (elements.buildProgressSteps) elements.buildProgressSteps.innerHTML = "";
+  }
+
+  function describeBuildIssue(payload = {}) {
+    const failure = payload.failure || null;
+    if (failure && typeof failure === "object") {
+      return {
+        code: failure.code || "build_failed",
+        title: failure.title || "开张准备卡住了",
+        reason: failure.reason || "这轮准备没有顺利完成。",
+        advice: "直接告诉店员想怎么调整。",
+        retryable: failure.retryable !== false,
+      };
+    }
+    const raw = String(payload.error || payload.reason || "");
+    if (/code:\s*['"]?432|电量值不足|insufficient/i.test(raw)) {
+      return {
+        code: "paint_supply_unavailable",
+        title: "画材没送到",
+        reason: "这轮还需要继续生成图片，但画材通道暂时没有接上。",
+        advice: "直接告诉店员想怎么调整。",
+        retryable: true,
+      };
+    }
+    return {
+      code: payload.type === "blocked" ? "missing_artifact" : "build_failed",
+      title: payload.type === "blocked" ? "还缺开张用品" : "开张准备卡住了",
+      reason: payload.type === "blocked" ? "还有开张要用的东西没准备齐。" : "这轮准备没有顺利完成。",
+      advice: "直接告诉店员想怎么调整。",
+      retryable: true,
+    };
+  }
+
+  function showBuildIssue(issue) {
+    state.lastBuildIssue = issue;
+  }
+
+  function hideBuildIssue() {
+    state.lastBuildIssue = null;
   }
 
   function showIdeaLlmLoading(baseText) {
@@ -743,6 +846,7 @@
         handleBuildEvent({
           type: "failed",
           error: status.error || "开张准备卡住了",
+          failure: status.failure || null,
         });
       }
     } catch (error) {
@@ -1071,11 +1175,19 @@
           return `- 暂停：${item.reason || "还缺开张要用的东西"}`;
         }
         if (item.type === "failed") {
-          return `- 中断：${item.error || "未知原因"}`;
+          const issue = item.issue || state.lastBuildIssue || null;
+          return `- 中断：${issue?.title || "开张准备卡住了"}；原因：${issue?.reason || item.error || "未知原因"}`;
         }
         return `- 完成：店铺状态=${item.status || "ready"}`;
       })
       .join("\n") || "- 暂时还没有新的开张动静";
+    const currentIssue = state.lastBuildIssue
+      ? [
+          `Current blocking issue: ${state.lastBuildIssue.title}`,
+          `Issue reason: ${state.lastBuildIssue.reason}`,
+          "Player can continue by telling the assistant what they want changed.",
+        ].join("\n")
+      : "Current blocking issue: none";
 
     const prompt = [
       "You are an in-world shop assistant talking during shop construction.",
@@ -1083,10 +1195,13 @@
       `Assistant name: ${concept.assistantName || "店员助手"}`,
       `Assistant role: ${concept.assistantRole || "店长助手"}`,
       `Current shop preparation step: ${state.currentStageLabel || "尚未开始"}`,
+      currentIssue,
       "Shop preparation progress log:",
       progressLog,
       `User message: ${message}`,
       "Only describe shop preparation progress that is explicitly present in the progress log.",
+      "If there is a blocking issue, explain it clearly in the assistant's own voice. Do not mention retry, original plan, technical errors, tools, agents, models, or engineering steps.",
+      "If the player says anything while blocked, treat it as their instruction for how the shop should continue.",
       "If the user asks about later work, say the shop is still waiting for that step.",
       "Answer in concise simplified Chinese.",
       "Keep it in character and under 90 Chinese characters.",
@@ -1115,16 +1230,77 @@
     }, 2400);
   }
 
+  function playCreatorSfx(name, options) {
+    window.ShopSfx?.play(name, options);
+  }
+
+  function playCreatorSfxSequence(names, delayMs) {
+    window.ShopSfx?.playSequence(names, delayMs);
+  }
+
+  function persistPendingShopIdea(shopIdea, options = {}) {
+    const { continueAfterAuth = false } = options;
+    try {
+      if (shopIdea) {
+        window.sessionStorage.setItem(PENDING_IDEA_KEY, shopIdea);
+      }
+      if (continueAfterAuth) {
+        window.sessionStorage.setItem(PENDING_CONCEPT_AFTER_AUTH_KEY, "1");
+      }
+    } catch (error) {
+      console.error("Failed to persist pending shop idea", error);
+    }
+  }
+
+  function readPendingShopIdea() {
+    try {
+      return window.sessionStorage.getItem(PENDING_IDEA_KEY) || "";
+    } catch (error) {
+      console.error("Failed to read pending shop idea", error);
+      return "";
+    }
+  }
+
+  function clearPendingShopIdea() {
+    try {
+      window.sessionStorage.removeItem(PENDING_IDEA_KEY);
+    } catch (error) {
+      console.error("Failed to clear pending shop idea", error);
+    }
+  }
+
+  function shouldResumeConceptAfterAuth() {
+    try {
+      return window.sessionStorage.getItem(PENDING_CONCEPT_AFTER_AUTH_KEY) === "1";
+    } catch (error) {
+      console.error("Failed to read pending auth continuation", error);
+      return false;
+    }
+  }
+
+  function clearPendingConceptAfterAuth() {
+    try {
+      window.sessionStorage.removeItem(PENDING_CONCEPT_AFTER_AUTH_KEY);
+    } catch (error) {
+      console.error("Failed to clear pending auth continuation", error);
+    }
+  }
+
   async function refreshAuthUi() {
-    if (!elements.netaAuthStatus || !elements.netaAuthHint || !elements.netaAuthButton) return;
     const auth = window.NetaAuth;
     const authenticated = auth ? await auth.isAuthenticated().catch(() => false) : false;
 
-    elements.netaAuthStatus.textContent = authenticated ? "Neta 通行章已连接" : "Neta 通行章未连接";
-    elements.netaAuthHint.textContent = authenticated
-      ? "店员已经能收到你的开店信。"
-      : "连接后，店员才能收到你的开店信。";
-    elements.netaAuthButton.textContent = authenticated ? "已连接" : "连接 Neta";
+    if (elements.netaAuthStatus) {
+      elements.netaAuthStatus.textContent = authenticated ? "Neta 通行章已连接" : "Neta 通行章未连接";
+    }
+    if (elements.netaAuthHint) {
+      elements.netaAuthHint.textContent = authenticated
+        ? "店员已经能收到你的开店信。"
+        : "连接后，店员才能收到你的开店信。";
+    }
+    if (elements.netaAuthButton) {
+      elements.netaAuthButton.textContent = authenticated ? "已连接" : "连接 Neta";
+    }
     if (elements.llmProbeButton) {
       elements.llmProbeButton.disabled = !authenticated;
     }
@@ -1171,9 +1347,40 @@
       return true;
     }
 
-    showCreatorToast("先连接 Neta", "连接后，店员才能收到你的开店信。");
-    await auth.signIn();
+    try {
+      await auth.signIn();
+    } catch (error) {
+      console.error("Failed to start Neta auth", error);
+      showCreatorToast("通行章没盖上", "店员还没收到开店信，你写的内容已经先留在输入框里。 ");
+    }
     return false;
+  }
+
+  async function isNetaAuthenticated() {
+    return Boolean(await window.NetaAuth?.isAuthenticated?.().catch(() => false));
+  }
+
+  function showAuthPrompt(shopIdea) {
+    state.pendingAuthShopIdea = shopIdea || "";
+    persistPendingShopIdea(shopIdea, { continueAfterAuth: true });
+    if (elements.authPrompt) {
+      elements.authPrompt.hidden = false;
+    }
+  }
+
+  function hideAuthPrompt() {
+    if (elements.authPrompt) elements.authPrompt.hidden = true;
+  }
+
+  async function continueAuthPrompt() {
+    const shopIdea = state.pendingAuthShopIdea || elements.shopIdeaInput.value.trim() || readPendingShopIdea();
+    if (shopIdea) {
+      elements.shopIdeaInput.value = shopIdea;
+      persistPendingShopIdea(shopIdea, { continueAfterAuth: true });
+    }
+    hideAuthPrompt();
+    if (!(await ensureNetaAuth())) return;
+    await handleGenerateConcept({ fromAuthResume: true });
   }
 
   function setStep(step) {
@@ -1188,18 +1395,29 @@
       building: state.buildReady ? "可开张" : "布置中",
     };
     elements.phaseChip.textContent = phaseMap[step] || "布置中";
+    if (step === "idea") {
+      window.ShopSfx?.playCreatorBgm();
+    } else {
+      window.ShopSfx?.stopCreatorBgm();
+    }
   }
 
   function showCreatorPage() {
     elements.page.hidden = false;
     elements.appShell.hidden = true;
     document.body.classList.add("creator-page-active");
+    if ((elements.page.dataset.step || "idea") === "idea") {
+      window.ShopSfx?.playCreatorBgm();
+    } else {
+      window.ShopSfx?.stopCreatorBgm();
+    }
   }
 
   function showShopPage() {
     elements.page.hidden = true;
     elements.appShell.hidden = false;
     document.body.classList.remove("creator-page-active");
+    window.ShopSfx?.stopCreatorBgm();
   }
 
   function renderHistory() {
@@ -1225,12 +1443,22 @@
     renderHistory();
   }
 
+  function setDialogueNotice(text) {
+    elements.playerPromptEcho.hidden = false;
+    elements.playerPromptEcho.textContent = text;
+  }
+
+  function buildIssueDialogue(issue = {}) {
+    const reason = issue.reason || "开张准备暂时停住了。";
+    return `${reason} 你直接和我说想怎么调整，我会照着你的意思继续把店开起来。`;
+  }
+
   function enableLoadingChat() {
     elements.loadingInputRow.hidden = false;
     elements.loadingChatInput.disabled = false;
     elements.sendLoadingChatButton.disabled = false;
     elements.loadingChatInput.placeholder = state.buildBlocked || state.buildFailed
-      ? "告诉店员要怎么改，或直接点下方重试"
+      ? "直接告诉店员想怎么调整"
       : `输入一句想问${state.concept?.assistantName || "店员"}的话`;
   }
 
@@ -1242,17 +1470,14 @@
   }
 
   function showBuildRecovery() {
-    if (!elements.buildRecoveryRow) return;
-    elements.buildRecoveryRow.hidden = false;
-    if (elements.retryBuildButton) elements.retryBuildButton.disabled = false;
-    if (elements.reviseBuildButton) elements.reviseBuildButton.disabled = false;
+    enableLoadingChat();
   }
 
   function hideBuildRecovery() {
-    if (!elements.buildRecoveryRow) return;
-    elements.buildRecoveryRow.hidden = true;
-    if (elements.retryBuildButton) elements.retryBuildButton.disabled = false;
-    if (elements.reviseBuildButton) elements.reviseBuildButton.disabled = false;
+    if (elements.loadingInputRow && !state.buildReady) {
+      elements.loadingChatInput.disabled = false;
+      elements.sendLoadingChatButton.disabled = false;
+    }
   }
 
   function setDialogue({ speaker, text, prompt, record = true }) {
@@ -1360,6 +1585,7 @@
     state.buildBlocked = false;
     state.buildFailed = false;
     state.currentStageLabel = "";
+    hideBuildIssue();
     state.portraitReady = false;
     if (elements.creatorVisualNovel) {
       elements.creatorVisualNovel.dataset.mode = "dialogue";
@@ -1395,6 +1621,7 @@
       text: "门已经擦亮，货也摆上了。现在可以进店，看看这家店真正开张后的样子。",
       prompt: "",
     });
+    playCreatorSfxSequence(["sparkle", "level"], 80);
     renderBuildProgress();
   }
 
@@ -1440,10 +1667,12 @@
         elements.loadingAssistantPortrait.hidden = false;
         elements.loadingAssistantPortrait.src = state.concept.loadingPortraitUrl;
         enableLoadingChat();
+        playCreatorSfx("unlock");
       }
       state.currentStageLabel = payload.label || "";
       state.buildBlocked = false;
       state.buildFailed = false;
+      hideBuildIssue();
       hideBuildRecovery();
       pushBuildTimeline({
         type: "stage",
@@ -1451,13 +1680,12 @@
         status: payload.status || null,
         text: getGameStageText(payload, "柜台正在准备中"),
       });
-      const stageText = getGameStageText(payload, "柜台正在准备中");
-      setDialogue({
-        speaker: receivedPortrait ? state.concept.assistantName : "柜台响动",
-        text: receivedPortrait
-          ? "我到了，先替你看住柜台。接下来有新动静，我会在这里告诉你。"
-          : stageText,
-      });
+      if (receivedPortrait) {
+        setDialogue({
+          speaker: state.concept.assistantName,
+          text: "我到岗了，先替你看住柜台。你可以继续问我，店里的准备有新进展我也会告诉你。",
+        });
+      }
       renderBuildProgress();
       if (shouldPollForBuildCompletion(payload.label, payload.status)) {
         startBuildCompletionPolling(state.jobId);
@@ -1475,6 +1703,7 @@
         speaker: payload.name || state.concept.assistantName,
         text: payload.text,
       });
+      playCreatorSfx("drop", { volume: 0.24 });
       return;
     }
 
@@ -1503,13 +1732,18 @@
       elements.buildActionRow.hidden = true;
       const isThemeBlocked = Array.isArray(payload.missingArtifacts)
         && payload.missingArtifacts.some((item) => String(item?.id || "").startsWith("theme."));
+      const issue = describeBuildIssue(payload);
+      if (isThemeBlocked) {
+        issue.title = "主题配色还没定好";
+        issue.reason = "这家店的界面配色还没准备完整，暂时不能开门。";
+        issue.advice = "直接告诉店员想怎么调整。";
+      }
+      showBuildIssue(issue);
+      playCreatorSfx("invalid");
       setDialogue({
-        speaker: "柜台暂停",
-        text: isThemeBlocked
-          ? "这家店的界面配色还没准备完整。你可以让店员按原方案重试，也可以在输入框里补一句修改建议。"
-          : "当前还缺一件开张要用的东西。你可以让店员按原方案重试，也可以在输入框里补一句修改建议。",
+        speaker: state.concept.assistantName || "店员",
+        text: buildIssueDialogue(issue),
       });
-      showCreatorToast(isThemeBlocked ? "主题还没定好" : "还缺东西", isThemeBlocked ? "界面配色还缺几项，准备完整后才能进店。" : "有一件开张用品还没送到，先等它补齐。");
       renderBuildProgress();
       return;
     }
@@ -1524,9 +1758,11 @@
       state.buildFailed = true;
       state.buildBlocked = false;
       state.buildReady = false;
+      const issue = describeBuildIssue(payload);
       pushBuildTimeline({
         type: "failed",
-        error: "开张准备卡住了",
+        error: issue.reason || payload.error || "开张准备卡住了",
+        issue,
       });
       console.error("[creator] build:failed", {
         jobId: state.jobId,
@@ -1535,17 +1771,19 @@
         timeline: state.buildTimeline.slice(),
       });
       elements.buildActionRow.hidden = true;
+      showBuildIssue(issue);
+      playCreatorSfx("invalid");
       setDialogue({
-        speaker: "柜台暂停",
-        text: "开张准备卡住了。你可以问店员发生了什么，也可以直接重试；如果想改方向，就在输入框里写一句建议再重试。",
+        speaker: state.concept.assistantName || "店员",
+        text: buildIssueDialogue(issue),
       });
       closeBuildStream();
-      showCreatorToast("开张卡住了", "这轮准备没有顺利完成。");
       renderBuildProgress();
       return;
     }
 
     if (payload.type === "complete") {
+      playCreatorSfxSequence(["sparkle", "level"], 80);
       completeBuildFromSession(payload.session || null, "stream");
     }
   }
@@ -1614,18 +1852,27 @@
       state.defaults.worldName = payload.defaults?.worldName || DEFAULTS.worldName;
       state.agentMeta = payload.adapters?.agent || null;
       initPageCopy();
+      const pendingShopIdea = readPendingShopIdea();
+      const shouldResumeConcept = shouldResumeConceptAfterAuth();
+      const authenticatedAfterBoot = window.NetaAuth
+        ? await window.NetaAuth.isAuthenticated().catch(() => false)
+        : false;
 
       if (shouldSoftFresh) {
         resetBuildView();
         state.sessionId = null;
         state.concept = null;
         state.jobId = null;
-        elements.shopIdeaInput.value = "";
+        elements.shopIdeaInput.value = pendingShopIdea || "";
         showCreatorPage();
         setStep("idea");
         console.log("[creator] bootstrap:fresh-entry", {
           preservedSessionId: payload.session?.sessionId || null,
         });
+        if (shouldResumeConcept && authenticatedAfterBoot && pendingShopIdea) {
+          clearPendingConceptAfterAuth();
+          window.setTimeout(() => handleGenerateConcept({ fromAuthResume: true }), 0);
+        }
         return;
       }
 
@@ -1643,7 +1890,7 @@
         state.sessionId = payload.session.sessionId || null;
         state.concept = hydrateConceptFromSession(payload.session);
         state.jobId = null;
-        elements.shopIdeaInput.value = "";
+        clearIdeaDraft();
 
         const runtimeConfig =
           payload.session.runtimeConfig || payload.session.concept?.runtimeConfig || {};
@@ -1662,7 +1909,7 @@
         state.sessionId = payload.session.sessionId || null;
         state.concept = hydrateConceptFromSession(payload.session);
         state.jobId = null;
-        elements.shopIdeaInput.value = "";
+        clearIdeaDraft();
         showCreatorPage();
         setStep("building");
         if (state.concept) {
@@ -1681,10 +1928,17 @@
       state.sessionId = null;
       state.concept = null;
       state.jobId = null;
-      elements.shopIdeaInput.value = "";
+      elements.shopIdeaInput.value = pendingShopIdea || "";
       applyRuntimeConfig({});
       showCreatorPage();
       setStep("idea");
+      if (shouldResumeConcept && authenticatedAfterBoot && pendingShopIdea) {
+        clearPendingConceptAfterAuth();
+        window.setTimeout(() => handleGenerateConcept({ fromAuthResume: true }), 0);
+      } else if (shouldResumeConcept && !authenticatedAfterBoot) {
+        clearPendingConceptAfterAuth();
+        showCreatorToast("通行章没盖上", "店员还没收到开店信，你写的内容已经留在输入框里。 ");
+      }
       if (payload.session) {
         console.log("[creator] bootstrap:ignore-session", {
           sessionId: payload.session.sessionId,
@@ -1705,8 +1959,8 @@
   function initPageCopy() {
     elements.worldEyebrow.textContent = `${state.defaults.worldName} · 世界商店开张`;
     elements.title.textContent = "世界商店开张";
-    elements.narration.textContent =
-      `${state.defaults.worldName}正在有条不紊地建设中。\n为了持续获得世界建设资源，你决定先开一间主体店铺。\n想开什么店铺？`;
+    elements.narration.textContent = "这个世界需要建设一家店铺\n总之，你准备行动了\n想开什么店？";
+    elements.shopIdeaInput.placeholder = "任何店铺，只要你能想到...";
     if (elements.llmProbeResult) {
       elements.llmProbeResult.hidden = true;
       elements.llmProbeResult.textContent = "";
@@ -1716,15 +1970,29 @@
     syncHistoryVisibility();
   }
 
-  async function handleGenerateConcept() {
+  function clearIdeaDraft() {
+    clearPendingShopIdea();
+    clearPendingConceptAfterAuth();
+  }
+
+  async function handleGenerateConcept(options = {}) {
+    const { fromAuthResume = false } = options;
     const shopIdea = elements.shopIdeaInput.value.trim();
     if (!shopIdea) {
+      playCreatorSfx("invalid");
       showCreatorToast("还没写店铺主题", "先输入一句店铺设想，再继续往下开店。");
       elements.shopIdeaInput.focus();
       return;
     }
 
-    if (!(await ensureNetaAuth())) return;
+    persistPendingShopIdea(shopIdea, { continueAfterAuth: !fromAuthResume });
+    if (!fromAuthResume && !(await isNetaAuthenticated())) {
+      showAuthPrompt(shopIdea);
+      return;
+    }
+    if (!(await ensureNetaAuth())) {
+      return;
+    }
 
     elements.generateConceptButton.disabled = true;
     elements.shopIdeaInput.disabled = true;
@@ -1740,10 +2008,14 @@
         throw new Error("Concept payload missing");
       }
       console.log("[creator] concept:response", concept);
+      playCreatorSfx("unlock");
+      clearPendingShopIdea();
+      clearPendingConceptAfterAuth();
       renderConcept(concept);
     } catch (error) {
       console.error("Failed to generate concept", error);
-      showCreatorToast("开店信没写成", "旁白暂时没写出可用的开店方案，换个说法再试一次。");
+      playCreatorSfx("invalid");
+      showCreatorToast("开店信没写成", "店员暂时没整理出可用的开店方案，换个说法再试一次。");
     } finally {
       hideIdeaLlmLoading();
       elements.shopIdeaInput.disabled = false;
@@ -1766,8 +2038,8 @@
     if (!state.concept) return;
     if (!(await ensureNetaAuth())) return;
 
-    elements.startBuildButton.disabled = true;
-    elements.backToIdeaButton.disabled = true;
+    if (elements.startBuildButton) elements.startBuildButton.disabled = true;
+    if (elements.backToIdeaButton) elements.backToIdeaButton.disabled = true;
 
     if (revision) {
       applyBuildConceptPatch({
@@ -1793,36 +2065,43 @@
       state.jobId = payload.jobId;
       state.sessionId = payload.sessionId;
       console.log("[creator] build:start", payload);
+      playCreatorSfx("sparkle");
       connectBuildStream(payload.jobId);
       startBuildCompletionPolling(payload.jobId);
     } catch (error) {
       console.error("Failed to start build job", error);
+      playCreatorSfx("invalid");
       showCreatorToast("开店信没送出", "暂时没联系上接手准备的人，再试一次。 ");
       setStep("confirm");
     } finally {
-      elements.startBuildButton.disabled = false;
-      elements.backToIdeaButton.disabled = false;
+      if (elements.startBuildButton) elements.startBuildButton.disabled = false;
+      if (elements.backToIdeaButton) elements.backToIdeaButton.disabled = false;
     }
-  }
-
-  async function handleRetryBuild({ withRevision = false } = {}) {
-    if (!state.concept) return;
-    const revision = withRevision ? elements.loadingChatInput.value.trim() : "";
-    if (withRevision && !revision) {
-      showCreatorToast("先写一句建议", "在输入框里告诉店员这轮要怎么改，再带建议重试。 ");
-      elements.loadingChatInput.focus();
-      return;
-    }
-    hideBuildRecovery();
-    if (elements.retryBuildButton) elements.retryBuildButton.disabled = true;
-    if (elements.reviseBuildButton) elements.reviseBuildButton.disabled = true;
-    await handleStartBuild({ retry: true, revision });
   }
 
   async function handleLoadingChat() {
     const message = elements.loadingChatInput.value.trim();
-    if (!message) return;
+    if (!message) {
+      playCreatorSfx("invalid");
+      return;
+    }
     if (!(await ensureNetaAuth())) return;
+
+    if ((state.buildBlocked || state.buildFailed) && state.concept) {
+      elements.loadingChatInput.value = "";
+      elements.loadingChatInput.disabled = true;
+      elements.sendLoadingChatButton.disabled = true;
+      setDialogue({
+        speaker: "你",
+        text: message,
+        record: false,
+      });
+      pushHistory("user", "你", message);
+      await handleStartBuild({ retry: true, revision: message });
+      elements.loadingChatInput.disabled = false;
+      elements.sendLoadingChatButton.disabled = false;
+      return;
+    }
 
     elements.loadingChatInput.value = "";
     elements.loadingChatInput.disabled = true;
@@ -1832,6 +2111,7 @@
       const reply = await replyDuringLoadingDirect(state.concept, message);
       console.log("[creator] loading-chat:response", reply);
       stopLoadingLoop();
+      playCreatorSfx("drop");
       setDialogue({
         speaker: state.concept.assistantName,
         text: reply?.text || "我先继续看着柜台，有新动静就告诉你。",
@@ -1840,6 +2120,7 @@
       console.error("Failed to send loading chat", error);
       stopLoadingLoop();
       elements.loadingChatInput.value = message;
+      playCreatorSfx("invalid");
       showCreatorToast("店员没听清", "店员暂时没回话，稍后再问一次。");
     }
     elements.loadingChatInput.disabled = false;
@@ -1854,6 +2135,7 @@
         missingThemeTokens,
         runtimeConfig: state.concept?.runtimeConfig || null,
       });
+      playCreatorSfx("invalid");
       showCreatorToast("主题还没定好", "这家店的界面配色还没准备完整，先别急着进店。");
       return;
     }
@@ -1896,7 +2178,7 @@
     resetBuildView();
     state.concept = null;
     state.sessionId = null;
-    elements.shopIdeaInput.value = "";
+    clearIdeaDraft();
     applyRuntimeConfig({});
     initPageCopy();
     setStep("idea");
@@ -1934,7 +2216,7 @@
     state.concept = null;
     state.sessionId = null;
     state.jobId = null;
-    elements.shopIdeaInput.value = "";
+    clearIdeaDraft();
     applyRuntimeConfig({});
     initPageCopy();
     setStep("idea");
@@ -1998,8 +2280,11 @@
   elements.backToIdeaButton.addEventListener("click", () => setStep("idea"));
   elements.startBuildButton.addEventListener("click", handleStartBuild);
   elements.sendLoadingChatButton.addEventListener("click", handleLoadingChat);
-  elements.retryBuildButton?.addEventListener("click", () => handleRetryBuild({ withRevision: false }));
-  elements.reviseBuildButton?.addEventListener("click", () => handleRetryBuild({ withRevision: true }));
+  elements.confirmAuthPromptButton?.addEventListener("click", continueAuthPrompt);
+  elements.cancelAuthPromptButton?.addEventListener("click", () => {
+    hideAuthPrompt();
+    elements.shopIdeaInput.focus();
+  });
   elements.toggleHistoryButton.addEventListener("click", () => {
     state.historyOpen = !state.historyOpen;
     syncHistoryVisibility();
@@ -2010,24 +2295,11 @@
     handleLoadingChat();
   });
   elements.enterShopButton.addEventListener("click", handleEnterShop);
-  elements.rebuildShopButton.addEventListener("click", handleRebuild);
+  elements.rebuildShopButton?.addEventListener("click", handleRebuild);
   elements.creatorHallButton?.addEventListener("click", () => {
     showCreatorToast("大厅即将上线", "即将上线，敬请期待。");
   });
   elements.llmProbeButton?.addEventListener("click", handleRunLlmProbe);
-  elements.netaAuthButton?.addEventListener("click", async () => {
-    const auth = window.NetaAuth;
-    if (!auth) {
-      showCreatorToast("通行章缺失", "盖章台还没摆出来，刷新后再试一次。");
-      return;
-    }
-    if (await auth.isAuthenticated().catch(() => false)) {
-      showCreatorToast("通行章已盖", "现在可以继续写开店信。");
-      return;
-    }
-    await auth.signIn();
-  });
-
   window.resetMvpTestState = resetTestState;
   window.__CREATOR_DEBUG__ = {
     resetTestState,

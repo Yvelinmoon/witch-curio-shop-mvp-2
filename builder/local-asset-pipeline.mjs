@@ -7,6 +7,47 @@ import { PNG } from "pngjs";
 const execFileAsync = promisify(execFile);
 const NETA_IMAGE_TIMEOUT_MS = Number(process.env.NETA_IMAGE_TIMEOUT_MS || 300_000);
 const IMAGE_RETRY_DELAY_MS = Number(process.env.NETA_IMAGE_RETRY_DELAY_MS || 900);
+const NETA_SKILL_CONFIG_DIR = process.env.NETA_SKILL_CONFIG_DIR || path.join(process.cwd(), "generated", ".neta-skill-config");
+const NETA_SKILL_API_BASE_URL = process.env.NETA_API_BASE_URL || "https://api.talesofai.cn";
+let didLogNetaSkillIdentity = false;
+
+function buildNetaSkillEnv() {
+  return {
+    ...process.env,
+    NETA_CONFIG_DIR: NETA_SKILL_CONFIG_DIR,
+    NETA_API_BASE_URL: NETA_SKILL_API_BASE_URL,
+  };
+}
+
+function decodeJwtPayload(token = "") {
+  const parts = String(token || "").split(".");
+  if (parts.length < 2) return null;
+  try {
+    return JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8"));
+  } catch {
+    return null;
+  }
+}
+
+function logNetaSkillIdentityOnce() {
+  if (didLogNetaSkillIdentity) return;
+  didLogNetaSkillIdentity = true;
+  const payload = decodeJwtPayload(process.env.NETA_TOKEN || "");
+  console.log("[asset-pipeline] neta skill env", {
+    apiBaseUrl: NETA_SKILL_API_BASE_URL,
+    configDir: NETA_SKILL_CONFIG_DIR,
+    tokenPresent: Boolean(process.env.NETA_TOKEN),
+    tokenUserId: payload?.id || payload?.talesofai_id || payload?.sub || null,
+    tokenUuid: payload?.uuid || payload?.talesofai_uuid || null,
+    tokenExpiresAt: payload?.expires_at || payload?.exp || null,
+  });
+}
+
+function assertNetaEnvTokenPresent() {
+  if (!process.env.NETA_TOKEN) {
+    throw new Error("Neta image token missing from environment");
+  }
+}
 
 function normalizeText(value) {
   return typeof value === "string" ? value.trim() : "";
@@ -189,13 +230,15 @@ function buildAssistantPrompt(handshake) {
     `Assistant summary: ${concept.assistantSummary || ""}`,
     "Do not add species, body features, technology, powers, factions, or genre elements that are not present in the shop idea, world, role, or summary.",
     "For a real-world shop, use a believable shop worker outfit and grounded character design.",
-    "One 16:9 sheet, 4 expressions in one horizontal row.",
-    "Left to right order must be: smile, serious, angry, confused.",
-    "Half-body portrait framing only, fully visible character in each panel.",
-    "Same character design in all four panels, solid pure white background only.",
-    "Leave generous whitespace between the four panels so slicing never cuts into hair, hands, or shoulders.",
-    "Keep each character centered and slightly smaller than the panel bounds.",
-    "Every body part stays inside its own panel boundaries.",
+    "The image must be one horizontal 16:9 game asset sheet.",
+    "Place exactly four separate half-body portraits in the four corners of the canvas, arranged as a clear 2x2 slicing layout.",
+    "Corner order must be: top-left smile, top-right serious, bottom-left angry, bottom-right confused.",
+    "Keep the center of the canvas mostly empty pure white space so the four portraits never touch each other.",
+    "Half-body portrait framing only, fully visible character in each corner quadrant.",
+    "Same character design in all four portraits, solid pure white background only.",
+    "Leave generous whitespace around head, hair, hands, and shoulders so 2x2 slicing never cuts into the figure.",
+    "Keep each character centered inside its own corner quadrant and slightly smaller than the quadrant bounds.",
+    "Every body part stays inside its own quadrant boundaries.",
   ]
     .filter(Boolean)
     .join("\n\n");
@@ -213,13 +256,15 @@ function buildSafeAssistantPrompt(handshake) {
     "Do not add species, body features, technology, powers, factions, or genre elements that are not present in the role or personality summary.",
     "For a real-world shop, use a believable shop worker outfit and grounded character design.",
     "Young original assistant, clever expression, readable silhouette, game-friendly design.",
-    "One 16:9 sheet, 4 expressions in one horizontal row.",
-    "Left to right order must be: smile, serious, angry, confused.",
-    "Half-body portrait framing only, fully visible character in each panel.",
-    "Same character design in all four panels, solid pure white background only.",
-    "Leave generous whitespace between the four panels so slicing never cuts into hair, hands, or shoulders.",
-    "Keep each character centered and slightly smaller than the panel bounds.",
-    "Every body part stays inside its own panel boundaries.",
+    "The image must be one horizontal 16:9 game asset sheet.",
+    "Place exactly four separate half-body portraits in the four corners of the canvas, arranged as a clear 2x2 slicing layout.",
+    "Corner order must be: top-left smile, top-right serious, bottom-left angry, bottom-right confused.",
+    "Keep the center of the canvas mostly empty pure white space so the four portraits never touch each other.",
+    "Half-body portrait framing only, fully visible character in each corner quadrant.",
+    "Same character design in all four portraits, solid pure white background only.",
+    "Leave generous whitespace around head, hair, hands, and shoulders so 2x2 slicing never cuts into the figure.",
+    "Keep each character centered inside its own corner quadrant and slightly smaller than the quadrant bounds.",
+    "Every body part stays inside its own quadrant boundaries.",
   ].join("\n\n");
 }
 
@@ -232,8 +277,17 @@ function buildShopDecorStickerPrompt(handshake) {
     `Shop idea: ${concept.shopIdea || ""}`,
     `Shop name: ${concept.shopName || ""}`,
     `Shop summary: ${concept.summary || ""}`,
+    "Need a single coherent 2x3 sprite sheet for draggable shop decoration props.",
+    "Invisible grid layout: exactly 2 rows and 3 columns, no drawn grid lines, no borders, no dividers.",
+    "Every cell contains exactly one centered isolated decoration prop only.",
+    "Use consistent scale, consistent camera angle, consistent lighting, and consistent handcrafted casual game asset style across all six props.",
+    "Each prop must stay clearly inside its own cell and be slightly smaller than the cell bounds.",
+    "Leave generous pure white padding around every prop inside its own cell.",
+    "Keep obvious pure white gutters between neighboring cells so no silhouette, shadow, or detail touches another prop.",
+    "Do not scatter objects organically; do not create a poster, collage, room scene, storefront scene, or shelf scene.",
     "Make the six decorations theme-specific and useful for decorating the merge workbench area.",
-    "Solid pure white background only, isolated sticker props, blank unbranded surfaces.",
+    "Slot plan, left to right and top to bottom: R1C1 shelf/rack prop, R1C2 counter/display prop, R1C3 wall sign or lamp prop, R2C1 crate/cabinet prop, R2C2 floor prop, R2C3 door/window/ornament prop.",
+    "Solid pure white background only, isolated sticker props, blank unbranded surfaces, no text.",
   ]
     .filter(Boolean)
     .join("\n\n");
@@ -246,9 +300,16 @@ function buildSafeShopDecorStickerPrompt(handshake) {
     "Use original shop props, original silhouettes, blank labels, and unbranded designs.",
     `Shop idea: ${concept.shopIdea || "custom shop"}`,
     `Shop name: ${concept.shopName || "custom shop"}`,
-    "Create 6 large decorative shop props: shelf, display, counter, wall prop, floor prop, lamp or door-like prop.",
-    "Every cell contains one centered isolated object only, with generous pure white padding.",
-    "Blank unbranded surfaces, isolated objects, generous whitespace, and no visible grid lines.",
+    "Need a single coherent 2x3 sprite sheet for draggable shop decoration props.",
+    "Invisible grid layout: exactly 2 rows and 3 columns, no drawn grid lines, no borders, no dividers.",
+    "Create 6 theme-specific decorative shop props: shelf/rack, counter/display, wall sign or lamp, crate/cabinet, floor prop, door/window/ornament.",
+    "Every cell contains exactly one centered isolated object only.",
+    "Use consistent scale, consistent camera angle, consistent lighting, and consistent asset quality across all six objects.",
+    "Each object must stay clearly inside its own cell and be slightly smaller than the cell bounds.",
+    "Leave generous pure white padding around every object and clear white gutters between neighboring cells.",
+    "No object should touch, overlap, cast a shadow into, or visually connect with another cell.",
+    "Do not scatter objects organically; do not create a poster, collage, room scene, storefront scene, or shelf scene.",
+    "Blank unbranded surfaces, isolated objects, generous whitespace, no visible grid lines, no text.",
     "Warm handcrafted casual game sticker style, solid pure white background only.",
   ].join("\n\n");
 }
@@ -261,8 +322,17 @@ function buildUiButtonStickerPrompt(handshake) {
     `World: ${concept.worldName || "Unknown World"}`,
     `Shop idea: ${concept.shopIdea || ""}`,
     `Shop name: ${concept.shopName || ""}`,
+    "Need a single coherent 1x5 horizontal sprite sheet for floating shop control icons.",
+    "Invisible grid layout: exactly 1 row and 5 columns, no drawn grid lines, no borders, no dividers.",
+    "Every cell contains exactly one centered isolated icon-like object only.",
+    "Use consistent scale, consistent camera angle, consistent lighting, and consistent handcrafted casual game asset style across all five icons.",
+    "Each icon must stay clearly inside its own cell and be slightly smaller than the cell bounds.",
+    "Leave generous pure white padding around every icon inside its own cell.",
+    "Keep obvious pure white gutters between neighboring cells so no silhouette, shadow, or detail touches another icon.",
+    "Do not scatter objects organically; do not create a poster, collage, toolbar mockup, interface screenshot, or button UI frame.",
+    "Slot plan left to right: R1C1 lobby entrance icon, R1C2 collection book icon, R1C3 favorites shelf icon, R1C4 restart loop icon, R1C5 trash bin icon.",
     "The five button stickers must remain readable at small sizes and match the shop theme.",
-    "Solid pure white background only, isolated sticker icons, blank unbranded surfaces.",
+    "Solid pure white background only, isolated sticker icons, blank unbranded surfaces, no text.",
   ]
     .filter(Boolean)
     .join("\n\n");
@@ -274,9 +344,16 @@ function buildSafeUiButtonStickerPrompt(handshake) {
     "Generate a 1x5 horizontal sticker sheet for original shop game controls.",
     "Use original icon props, original silhouettes, blank labels, and unbranded designs.",
     `Shop idea: ${concept.shopIdea || "custom shop"}`,
-    "Five slots left to right: lobby icon, collection book icon, favorites shelf icon, restart icon, trash icon.",
-    "Every cell contains one centered isolated icon-like object only, with generous pure white padding.",
-    "Blank unbranded surfaces, isolated icons, generous whitespace, and no visible grid lines.",
+    "Need a single coherent 1x5 horizontal sprite sheet for floating shop control icons.",
+    "Invisible grid layout: exactly 1 row and 5 columns, no drawn grid lines, no borders, no dividers.",
+    "Five slots left to right: lobby entrance icon, collection book icon, favorites shelf icon, restart loop icon, trash bin icon.",
+    "Every cell contains exactly one centered isolated icon-like object only.",
+    "Use consistent scale, consistent camera angle, consistent lighting, and consistent asset quality across all five icons.",
+    "Each icon must stay clearly inside its own cell and be slightly smaller than the cell bounds.",
+    "Leave generous pure white padding around every icon and clear white gutters between neighboring cells.",
+    "No icon should touch, overlap, cast a shadow into, or visually connect with another cell.",
+    "Do not scatter objects organically; do not create a poster, collage, toolbar mockup, interface screenshot, or button UI frame.",
+    "Blank unbranded surfaces, isolated icons, generous whitespace, no visible grid lines, no text.",
     "Warm handcrafted casual game sticker style, solid pure white background only.",
   ].join("\n\n");
 }
@@ -397,7 +474,11 @@ async function runNetaMakeImageOnce({ prompt, width, height, aspect }) {
   let stdout;
   let stderr;
   try {
+    assertNetaEnvTokenPresent();
+    await mkdir(NETA_SKILL_CONFIG_DIR, { recursive: true });
+    logNetaSkillIdentityOnce();
     const result = await execFileAsync("npx", args, {
+      env: buildNetaSkillEnv(),
       maxBuffer: 16 * 1024 * 1024,
       timeout: NETA_IMAGE_TIMEOUT_MS,
     });
@@ -470,10 +551,14 @@ async function runNetaRemoveBackground(inputImageUuid) {
   let stdout;
   let stderr;
   try {
+    assertNetaEnvTokenPresent();
+    await mkdir(NETA_SKILL_CONFIG_DIR, { recursive: true });
+    logNetaSkillIdentityOnce();
     const result = await execFileAsync(
       "npx",
       ["-y", "@talesofai/neta-skills@latest", "remove_background", "--input_image", inputImageUuid],
       {
+        env: buildNetaSkillEnv(),
         maxBuffer: 16 * 1024 * 1024,
         timeout: NETA_IMAGE_TIMEOUT_MS,
       },
@@ -799,6 +884,12 @@ async function generateStickerSheet({ handshake, fileId, prompt, promptVariants,
   if (!sheetFile?.path) {
     throw new Error(`Missing ${fileId} output path in handshake`);
   }
+  console.log("[asset-pipeline] make_image:start", {
+    asset: fileId,
+    width,
+    height,
+    aspect: aspect || null,
+  });
   const generation = await runNetaMakeImage({ prompt, promptVariants, width, height, aspect });
   const rawOutputPath = sheetFile.path.replace(/\.png$/i, "_raw.png");
   await downloadToFile(generation.imageUrl, rawOutputPath);
@@ -821,6 +912,12 @@ export async function generateShopSheetAssets(handshake) {
   if (!shopSheetFile?.path) {
     throw new Error("Missing shop_sheet_4x8 output path in handshake");
   }
+  console.log("[asset-pipeline] make_image:start", {
+    asset: "shop_sheet_4x8",
+    width: 1536,
+    height: 768,
+    aspect: null,
+  });
   const generation = await runNetaMakeImage({
     prompt: buildShopSheetPrompt(handshake),
     promptVariants: [buildSafeShopSheetPrompt(handshake)],
@@ -847,11 +944,19 @@ export async function generateShopSheetAssets(handshake) {
 
 export async function generateAssistantPortraitAsset(handshake) {
   const outputSlots = handshake?.assets?.outputSlots || {};
-  const portraitSheetFile = outputSlots.requiredFiles?.find((item) => item.id === "assistant_sheet_1x4");
+  const portraitSheetFile = outputSlots.requiredFiles?.find(
+    (item) => item.id === "assistant_sheet_2x2" || item.id === "assistant_sheet_1x4",
+  );
   const portraitManifestFile = outputSlots.requiredFiles?.find((item) => item.id === "assistant_manifest");
   if (!portraitSheetFile?.path || !portraitManifestFile?.path) {
     throw new Error("Missing assistant portrait output paths in handshake");
   }
+  console.log("[asset-pipeline] make_image:start", {
+    asset: "assistant_sheet_2x2",
+    width: 1600,
+    height: 900,
+    aspect: "16:9",
+  });
   const generation = await runNetaMakeImage({
     prompt: buildAssistantPrompt(handshake),
     promptVariants: [buildSafeAssistantPrompt(handshake)],
@@ -869,8 +974,8 @@ export async function generateAssistantPortraitAsset(handshake) {
   const splitResult = await splitSheetToTiles({
     sheetPath: portraitSheetFile.path,
     outputDir: outputSlots.portraitOutputDir,
-    rows: 1,
-    cols: 4,
+    rows: 2,
+    cols: 2,
     filenamePrefix: "expression",
     trimTiles: true,
   });
@@ -884,8 +989,8 @@ export async function generateAssistantPortraitAsset(handshake) {
   const generatedFiles = [
     path.join(outputSlots.portraitOutputDir, "expression_1_1.png"),
     path.join(outputSlots.portraitOutputDir, "expression_1_2.png"),
-    path.join(outputSlots.portraitOutputDir, "expression_1_3.png"),
-    path.join(outputSlots.portraitOutputDir, "expression_1_4.png"),
+    path.join(outputSlots.portraitOutputDir, "expression_2_1.png"),
+    path.join(outputSlots.portraitOutputDir, "expression_2_2.png"),
   ];
   const orderedKeys = ["smile", "serious", "angry", "confused"];
   await Promise.all(
@@ -976,12 +1081,12 @@ export async function splitGeneratedShopDecorStickers(handshake) {
   });
   const baseUrl = `/generated/build-artifacts/${handshake.job.jobId}/shop_decorations`;
   const definitions = [
-    { id: "decor-1", label: "店面装饰 1", defaultLeft: 5, defaultTop: 68, defaultWidth: 192 },
-    { id: "decor-2", label: "店面装饰 2", defaultLeft: 8, defaultTop: 71, defaultWidth: 176 },
-    { id: "decor-3", label: "店面装饰 3", defaultLeft: 11, defaultTop: 74, defaultWidth: 192 },
-    { id: "decor-4", label: "店面装饰 4", defaultLeft: 14, defaultTop: 77, defaultWidth: 176 },
-    { id: "decor-5", label: "店面装饰 5", defaultLeft: 17, defaultTop: 80, defaultWidth: 176 },
-    { id: "decor-6", label: "店面装饰 6", defaultLeft: 20, defaultTop: 83, defaultWidth: 176 },
+    { id: "decor-1", label: "店面装饰 1", defaultLeft: 5.8, defaultTop: 70.5, defaultWidth: 104 },
+    { id: "decor-2", label: "店面装饰 2", defaultLeft: 15.8, defaultTop: 70.5, defaultWidth: 104 },
+    { id: "decor-3", label: "店面装饰 3", defaultLeft: 25.8, defaultTop: 70.5, defaultWidth: 104 },
+    { id: "decor-4", label: "店面装饰 4", defaultLeft: 5.8, defaultTop: 84.2, defaultWidth: 104 },
+    { id: "decor-5", label: "店面装饰 5", defaultLeft: 15.8, defaultTop: 84.2, defaultWidth: 104 },
+    { id: "decor-6", label: "店面装饰 6", defaultLeft: 25.8, defaultTop: 84.2, defaultWidth: 104 },
   ];
   const manifest = await writeStickerManifest({
     manifestPath: manifestFile.path,

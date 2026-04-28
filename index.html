@@ -148,10 +148,10 @@
           <p id="introText" class="intro-text">
             霍格沃茨里总有一些上不了正式课程流程、却又不能放着不管的小需求。坏掉的练习物件、临时缺的草药材料、社团急用的小道具，最后都会被送到这里。
           </p>
+          <div id="introRuleStrip" class="intro-rule-strip" aria-label="玩法流程图"></div>
           <div id="introStep" class="intro-step">1 / 4</div>
           <div class="intro-actions">
-            <button id="introSkip" class="secondary-button" type="button">跳过</button>
-            <button id="introNext" class="primary-button" type="button">下一句</button>
+            <button id="introNext" class="primary-button" type="button">下一步</button>
           </div>
         </div>
       </section>
@@ -258,27 +258,17 @@
           <div class="creator-center-wrap">
             <div class="creator-entry-minimal-shell">
               <p class="creator-entry-line" id="creatorNarration">
-                这个世界正在有条不紊地建设中。在经营这个世界的过程中，你决定先开一间主题店铺。想开什么店铺？
+                这个世界需要建设一家店铺
+                总之，你准备行动了
+                想开什么店？
               </p>
-              <div class="creator-auth-row">
-                <div class="creator-auth-copy">
-                  <strong id="netaAuthStatus" class="creator-auth-status">Neta 通行证未连接</strong>
-                  <span id="netaAuthHint" class="creator-auth-hint">连接后，店员才能收到你的开店信。</span>
-                  <span id="creatorAgentHint" class="creator-agent-hint">送信人：等回音</span>
-                </div>
-                <div class="creator-auth-actions">
-                  <button id="creatorHallButton" class="secondary-button" type="button" hidden>去大厅</button>
-                  <button id="llmProbeButton" class="secondary-button" type="button" disabled hidden>试音</button>
-                  <button id="netaAuthButton" class="secondary-button" type="button">连接 Neta</button>
-                </div>
-              </div>
               <div id="llmProbeResult" class="creator-probe-result" hidden></div>
               <div class="creator-input-stack">
                 <textarea
                   id="shopIdeaInput"
                   class="creator-input creator-input-minimal"
                   rows="3"
-                  placeholder="例如：专卖禁林夜间采集物的月光杂货店"
+                  placeholder="任何店铺，只要你能想到..."
                 ></textarea>
                 <div class="creator-input-submit">
                   <button id="generateConceptButton" class="primary-button" type="button">继续</button>
@@ -346,7 +336,6 @@
 
               <div id="buildActionRow" class="creator-actions creator-actions-inline" hidden>
                 <button id="enterShopButton" class="primary-button" type="button">进入店铺</button>
-                <button id="rebuildShopButton" class="secondary-button" type="button">重新建一家</button>
               </div>
 
               <div id="historyPanel" class="creator-history-panel" hidden>
@@ -364,20 +353,28 @@
               <button id="sendLoadingChatButton" class="secondary-button creator-send-button" type="button">发送</button>
             </div>
 
-            <div id="buildRecoveryRow" class="creator-recovery-row" hidden>
-              <button id="retryBuildButton" class="secondary-button" type="button">按原方案重试</button>
-              <button id="reviseBuildButton" class="primary-button" type="button">带这句建议重试</button>
-            </div>
-
             <div id="creatorBuildProgress" class="creator-build-progress" aria-label="开店准备进度">
               <div class="creator-build-progress-head">
-                <span>开店准备</span>
+                <span aria-hidden="true"></span>
                 <strong id="creatorBuildProgressMeta">等店员到岗</strong>
               </div>
               <div class="creator-build-progress-bar" aria-hidden="true">
                 <div id="creatorBuildProgressFill" class="creator-build-progress-fill"></div>
               </div>
               <div id="creatorBuildProgressSteps" class="creator-build-progress-steps"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="creatorAuthPrompt" class="creator-auth-modal" hidden>
+          <div class="creator-auth-backdrop"></div>
+          <div class="creator-auth-card" role="dialog" aria-modal="true" aria-labelledby="creatorAuthTitle">
+            <p class="section-kicker">Neta 登录</p>
+            <h3 id="creatorAuthTitle">登录 Neta</h3>
+            <p>继续开店前需要先登录 Neta。登录成功后，会继续使用你刚才输入的店铺想法。</p>
+            <div class="creator-auth-actions">
+              <button id="cancelAuthPromptButton" class="secondary-button" type="button">先不登录</button>
+              <button id="confirmAuthPromptButton" class="primary-button" type="button">登录 Neta</button>
             </div>
           </div>
         </section>
@@ -397,31 +394,30 @@
         const text = document.getElementById("introText");
         const step = document.getElementById("introStep");
         const next = document.getElementById("introNext");
-        const skip = document.getElementById("introSkip");
         const storageKey = window.__SHOP_SAVE_KEY__ || "witch-curio_shop_mvp_v5_builder";
 
-        if (!overlay || !speaker || !text || !step || !next || !skip) return;
+        if (!overlay || !speaker || !text || !step || !next) return;
 
         const sequence = [
           {
-            speaker: "旁白",
+            speaker: "店员",
             text:
-              "这间店刚刚开门，第一批货还在柜台旁等着整理。先看清委托，再决定从哪里进货。",
-          },
-          {
-            speaker: "旁白",
-            text:
-              "你的目标很简单：把材料合成更高阶的货，交付客人的订单，赚到金币，让这家店慢慢长成这个世界的一部分。",
+              "目标很简单：经营这家店，合成更高级的货，完成客人的委托，赚金币让店铺升级。",
           },
           {
             speaker: "店员",
             text:
-              "我会帮你盯着委托和补给。你先从最基础的货开始，两个相同材料可以合成一个更好的成品。",
+              "先看右侧委托。委托会告诉你客人想要什么货，别急着乱点补给，先确定今天要做哪件东西。",
           },
           {
-            speaker: "旁白",
+            speaker: "店员",
             text:
-              "先完成第一张委托。只要柜台开始运转，后面的货源、配方、收藏和升级都会逐步展开。",
+              "从补给里拿基础货，再把两个相同物件拖到一起。它们会升级成下一档，越高级越值钱。",
+          },
+          {
+            speaker: "店员",
+            text:
+              "把委托需要的货交出去就能收金币。多余或没用的货可以拖到垃圾桶，先把第一单跑通。",
           },
         ];
 
@@ -443,7 +439,7 @@
           speaker.textContent = sequence[index].speaker;
           text.textContent = sequence[index].text;
           step.textContent = `${index + 1} / ${sequence.length}`;
-          next.textContent = index === sequence.length - 1 ? "开始整理" : "下一句";
+          next.textContent = index === sequence.length - 1 ? "开始营业" : "下一步";
         };
 
         next.onclick = () => {
@@ -456,14 +452,10 @@
           overlay.hidden = true;
         };
 
-        skip.onclick = () => {
-          writeIntroSeen();
-          overlay.hidden = true;
-        };
-
         renderFallback();
       }, 250);
     </script>
+    <script src="./sfx.js"></script>
     <script src="./neta-config.js"></script>
     <script src="./neta-auth.js"></script>
     <script src="./app.js"></script>
