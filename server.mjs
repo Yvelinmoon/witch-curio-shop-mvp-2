@@ -334,6 +334,7 @@ function buildMetaContentPackPrompt(input = {}, concept = {}) {
     "introSequence speakers should be the assistant name. Do not use narrator prose.",
     "introSequence must explain gameplay rules in the assistant's voice.",
     "introSequence should cover: 1) take goods from supply, 2) merge two identical goods to upgrade, 3) fulfill commissions, 4) earn coins and clear useless goods with trash.",
+    "Each supply station feeds the first item of one coherent upgrade chain; avoid wording that suggests unrelated goods in the same chain.",
     "All visible names and descriptions prioritize the user's shop theme first.",
     "The world setting is only flavor overlay and story framing.",
     "Output only the JSON object.",
@@ -353,8 +354,13 @@ function buildCoreChainsPrompt(input = {}, concept = {}) {
     "JSON format:",
     "chains[{id,label,items:[{name,description}]}]",
     "Structural notes:",
-    "Return exactly 3 chains in this order: base ingredients, processed ingredients, tools or display goods.",
+    "Return exactly 3 chains in this order: first upgrade ladder, second upgrade ladder, third upgrade ladder.",
     "Each chain has exactly 6 items. Do not include internal ids.",
+    "A chain is a vertical merge ladder, not a category list.",
+    "For every chain, item N+1 must plausibly be made by merging, bundling, refining, assembling, packaging, or upgrading two copies of item N.",
+    "Do not put unrelated parallel materials in the same chain. Invalid example: oak log -> cobblestone -> dirt -> gravel.",
+    "Use labels that describe the ladder itself, such as wood build line, stone forge line, drink brewing line, boxed toy line, pastry upgrade line, or service package line.",
+    "Each chain should have a clear semantic progression from raw/simple item to valuable finished merchandise.",
     "Visible chain labels and item names should come from the chosen shop theme.",
     "All visible names must prioritize the user's shop theme first.",
     "The 18 items should be tangible, shop-relevant assets for this theme.",
@@ -563,6 +569,42 @@ function coerceContentPackPart(sectionName, parsedPart, basePack) {
       };
     }),
   };
+}
+
+function getMeaningfulNameChars(value) {
+  const ignored = new Set("的一只个把件套组包盒瓶杯碗盘桶块片条根粒颗枚张副台架小大中高低新旧初级高级精选招牌完成成品半成品基础进阶终极普通特殊");
+  return new Set(
+    String(value || "")
+      .replace(/[\s\p{P}\p{S}a-zA-Z0-9]/gu, "")
+      .split("")
+      .filter((char) => char && !ignored.has(char)),
+  );
+}
+
+function hasSharedMeaningfulChar(firstName, secondName) {
+  const firstChars = getMeaningfulNameChars(firstName);
+  const secondChars = getMeaningfulNameChars(secondName);
+  if (!firstChars.size || !secondChars.size) return true;
+  return [...firstChars].some((char) => secondChars.has(char));
+}
+
+function validateCoreChainProgression(corePart) {
+  const badChains = [];
+  (corePart?.chains || []).forEach((chain) => {
+    const names = (chain.items || []).map((item) => item?.name || "").filter(Boolean);
+    if (names.length < 6) return;
+    const disconnectedPairs = names.slice(1).filter((name, index) => !hasSharedMeaningfulChar(names[index], name)).length;
+    if (disconnectedPairs >= 4) {
+      badChains.push({ label: chain.label || chain.id, names });
+    }
+  });
+  if (badChains.length) {
+    throw new Error(
+      `Core chains look like category lists instead of merge ladders: ${badChains
+        .map((chain) => `${chain.label}(${chain.names.join(" -> ")})`)
+        .join("; ")}`,
+    );
+  }
 }
 
 class StaticLLMAdapter {
@@ -778,21 +820,36 @@ class NetaLLMAdapter {
         maxTokens: 750,
       });
 
-      const coreText = await this.complete(buildCoreChainsPrompt(input, concept), {
-        ...context,
-        model: CONTENT_PACK_LLM_MODEL,
-        temperature: 0.2,
-        maxTokens: 900,
-        timeoutMs: sectionTimeoutMs,
-      }).catch((error) => {
-        throw new Error(`Content pack section core-chains failed: ${error.message}`);
-      });
-      const corePart = await parseSection({
-        sectionName: "core-chains",
-        text: coreText,
-        shapeHint: "{chains:[{label,items:[{name,description}]}]}",
-        maxTokens: 950,
-      });
+      const buildValidatedCorePart = async (retryNote = "") => {
+        const corePrompt = retryNote
+          ? `${buildCoreChainsPrompt(input, concept)}\n\nPrevious attempt failed because: ${retryNote}\nRegenerate only coherent vertical merge ladders.`
+          : buildCoreChainsPrompt(input, concept);
+        const coreText = await this.complete(corePrompt, {
+          ...context,
+          model: CONTENT_PACK_LLM_MODEL,
+          temperature: retryNote ? 0.12 : 0.2,
+          maxTokens: 900,
+          timeoutMs: sectionTimeoutMs,
+        }).catch((error) => {
+          throw new Error(`Content pack section core-chains failed: ${error.message}`);
+        });
+        const corePart = await parseSection({
+          sectionName: "core-chains",
+          text: coreText,
+          shapeHint: "{chains:[{label,items:[{name,description}]}]}",
+          maxTokens: 950,
+        });
+        validateCoreChainProgression(corePart);
+        return corePart;
+      };
+
+      let corePart;
+      try {
+        corePart = await buildValidatedCorePart();
+      } catch (error) {
+        llmWarn(`[neta-llm] content pack core chains progression retry: ${error.message}`);
+        corePart = await buildValidatedCorePart(error.message);
+      }
 
       const specialText = await this.complete(buildSpecialChainsPrompt(input, concept), {
         ...context,

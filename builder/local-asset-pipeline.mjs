@@ -188,9 +188,9 @@ function buildSafeShopSheetPrompt(handshake) {
   const slotPlan = buildSheetSlotPlan(handshake);
   const slotLines = slotPlan.map((slot) => {
     const chainDescriptorMap = {
-      botanical: "original base shop prop",
-      alchemy: "original processed shop prop",
-      curio: "original themed accent shop prop",
+      botanical: "first coherent merge upgrade ladder prop",
+      alchemy: "second coherent merge upgrade ladder prop",
+      curio: "third coherent merge upgrade ladder prop",
       waste: "failed shop residue",
       secret: "rare original hidden shop reward",
     };
